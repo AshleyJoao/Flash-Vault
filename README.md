@@ -1,4 +1,4 @@
-# Flash-Vault
+# C0rtexCard
 A fast, local-first flashcard app built for the way I actually revise — not the way study apps assume everyone revises.
 
 Dark, terminal-inspired UI — DM Mono for data and structure, Bricolage Grotesque for headings
