@@ -1,0 +1,2690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlashVault — Your Study Space</title>
+<meta name="description" content="FlashVault — a fast, local-first flashcard app with spaced-repetition-style tracking, quiz &amp; match modes, weak-card resurfacing, and a hand-built multilingual keyboard (including a from-scratch Korean Hangul syllable composer). No backend, no signup, all data stays in your browser.">
+<meta name="theme-color" content="#080810">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23080810'/%3E%3Crect x='18' y='30' width='64' height='44' rx='8' fill='none' stroke='%23818cf8' stroke-width='5'/%3E%3Cline x1='18' y1='46' x2='82' y2='46' stroke='%232dd4bf' stroke-width='5'/%3E%3Ccircle cx='30' cy='60' r='4' fill='%23818cf8'/%3E%3Ccircle cx='44' cy='60' r='4' fill='%232dd4bf'/%3E%3C/svg%3E">
+<meta property="og:title" content="FlashVault — Your Study Space">
+<meta property="og:description" content="A local-first flashcard app with spaced-repetition tracking, quiz &amp; match modes, and a hand-built Korean Hangul keyboard composer. No backend, no signup.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FlashVault — Your Study Space">
+<meta name="twitter:description" content="A local-first flashcard app with spaced-repetition tracking, quiz &amp; match modes, and a hand-built Korean Hangul keyboard composer.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080810;
+  --s1: #0f0f1a;
+  --s2: #16162a;
+  --s3: #1e1e35;
+  --border: #2a2a45;
+  --border2: #38385a;
+  --accent: #6366f1;
+  --accent-g: #818cf8;
+  --teal: #2dd4bf;
+  --rose: #fb7185;
+  --amber: #fbbf24;
+  --green: #34d399;
+  --text: #e2e2f0;
+  --text2: #9999bb;
+  --text3: #5a5a7a;
+  --mono: 'DM Mono', monospace;
+  --sans: 'Bricolage Grotesque', sans-serif;
+  --radius: 14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::after{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 10%, rgba(99,102,241,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 10% 90%, rgba(45,212,191,0.06) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--s1);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+/* ══════════════════════════════════
+   LAYOUT — sidebar + content
+══════════════════════════════════ */
+.app{display:flex;min-height:100vh;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  min-width:260px;
+  background:var(--s1);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+  z-index:20;
+}
+
+.sidebar-logo{
+  padding:24px 20px 16px;
+  border-bottom:1px solid var(--border);
+}
+.logo-mark{
+  font-family:var(--mono);
+  font-size:1.1rem;
+  font-weight:500;
+  color:var(--text);
+  letter-spacing:-0.5px;
+}
+.logo-mark span{color:var(--accent-g);}
+.logo-sub{font-size:0.7rem;color:var(--text3);margin-top:2px;font-family:var(--mono);}
+
+.sidebar-section{padding:16px 12px 8px;}
+.sidebar-section-label{
+  font-size:0.6rem;
+  font-family:var(--mono);
+  color:var(--text3);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  padding:0 8px;
+  margin-bottom:6px;
+}
+
+.folder-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all 0.15s;
+  position:relative;
+  margin-bottom:2px;
+}
+.folder-item:hover{background:var(--s2);}
+.folder-item.active{background:var(--s3);border:1px solid var(--border2);}
+.folder-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0;}
+.folder-name{
+  font-size:0.82rem;
+  font-weight:600;
+  flex:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.folder-count{
+  font-family:var(--mono);
+  font-size:0.65rem;
+  color:var(--text3);
+  background:var(--s3);
+  padding:2px 6px;
+  border-radius:20px;
+}
+.folder-item.active .folder-count{background:var(--border);}
+
+.folder-actions{
+  display:flex;
+  gap:2px;
+  opacity:0;
+  transition:opacity 0.15s;
+}
+.folder-item:hover .folder-actions{opacity:1;}
+.icon-btn{
+  width:22px;height:22px;border-radius:5px;border:none;
+  background:transparent;color:var(--text3);cursor:pointer;
+  font-size:0.7rem;display:flex;align-items:center;justify-content:center;
+  transition:all 0.12s;
+}
+.icon-btn:hover{background:var(--border);color:var(--text);}
+
+.new-folder-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 10px;border-radius:10px;
+  border:1px dashed var(--border2);
+  background:transparent;color:var(--text3);
+  font-family:var(--sans);font-size:0.8rem;font-weight:600;
+  cursor:pointer;transition:all 0.15s;width:100%;margin-top:4px;
+}
+.new-folder-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.06);}
+
+/* MAIN CONTENT */
+.content{flex:1;display:flex;flex-direction:column;min-width:0;}
+
+/* TOP BAR */
+.topbar{
+  padding:18px 28px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  background:rgba(8,8,16,0.8);
+  backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:10;
+}
+.topbar-left{display:flex;flex-direction:column;gap:2px;}
+.topbar-title{font-size:1.2rem;font-weight:800;}
+.topbar-path{font-family:var(--mono);font-size:0.68rem;color:var(--text3);}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+
+.btn{
+  padding:9px 18px;border-radius:10px;border:none;
+  font-family:var(--sans);font-size:0.82rem;font-weight:700;
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 16px rgba(99,102,241,0.3);}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--border2);background:var(--s3);}
+.btn-danger{background:rgba(251,113,133,0.12);color:var(--rose);border:1px solid rgba(251,113,133,0.25);}
+.btn-danger:hover{background:rgba(251,113,133,0.2);}
+
+/* ══════════════════════════════════
+   HOME / DECK LIST VIEW
+══════════════════════════════════ */
+#view-home{padding:28px;}
+
+.deck-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:14px;
+  margin-top:16px;
+}
+
+.deck-card{
+  background:var(--s2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+.deck-card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:var(--deck-color, var(--accent));
+}
+.deck-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+
+.deck-card-icon{font-size:1.6rem;margin-bottom:10px;}
+.deck-card-name{font-size:0.95rem;font-weight:700;margin-bottom:4px;}
+.deck-card-count{font-family:var(--mono);font-size:0.68rem;color:var(--text3);}
+.deck-card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--border);
+}
+.deck-card-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;}
+.deck-card:hover .deck-card-actions{opacity:1;}
+.mastery-bar{height:4px;background:var(--border);border-radius:2px;flex:1;margin-right:8px;overflow:hidden;}
+.mastery-fill{height:100%;background:var(--green);border-radius:2px;transition:width 0.4s;}
+
+.new-deck-card{
+  background:transparent;
+  border:1px dashed var(--border2);
+  border-radius:var(--radius);
+  padding:20px;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;min-height:140px;color:var(--text3);
+}
+.new-deck-card:hover{border-color:var(--accent);color:var(--accent);background:rgba(99,102,241,0.04);}
+.new-deck-card .plus{font-size:1.8rem;line-height:1;}
+.new-deck-card span{font-size:0.82rem;font-weight:600;}
+
+/* ══════════════════════════════════
+   STUDY VIEW (flashcard/quiz/match)
+══════════════════════════════════ */
+#view-study{padding:28px;display:none;}
+
+.mode-tabs{
+  display:flex;gap:6px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:12px;padding:5px;margin-bottom:28px;
+}
+.mode-tab{
+  flex:1;padding:9px 12px;border-radius:9px;border:none;
+  font-family:var(--sans);font-size:0.8rem;font-weight:700;
+  cursor:pointer;transition:all 0.18s;background:transparent;color:var(--text2);
+}
+.mode-tab.active{background:var(--accent);color:#fff;box-shadow:0 0 18px rgba(99,102,241,0.35);}
+.mode-tab:hover:not(.active){background:var(--s3);color:var(--text);}
+
+/* FLASHCARD */
+.fc-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.fc-counter{font-family:var(--mono);font-size:0.72rem;color:var(--text3);}
+.progress-wrap{height:3px;background:var(--border);border-radius:2px;margin-bottom:22px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--teal));border-radius:2px;transition:width 0.35s ease;}
+
+.card-scene{perspective:1400px;width:100%;height:300px;cursor:pointer;margin-bottom:24px;user-select:none;}
+.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);}
+.card-inner.flipped{transform:rotateY(180deg);}
+.card-face{
+  position:absolute;inset:0;border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:36px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.card-front{background:var(--s2);border:1px solid var(--border);border-top:3px solid var(--accent);}
+.card-back{background:var(--s1);border:1px solid var(--border);border-top:3px solid var(--teal);transform:rotateY(180deg);}
+.card-tag{font-family:var(--mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;align-self:flex-start;}
+.card-front .card-tag{color:var(--accent-g);}
+.card-back .card-tag{color:var(--teal);}
+.card-q{font-size:1.25rem;font-weight:700;text-align:center;line-height:1.45;}
+.card-a{font-size:0.95rem;text-align:center;line-height:1.65;color:var(--text);}
+.card-code-block{
+  font-family:var(--mono);font-size:0.72rem;
+  background:rgba(0,0,0,0.5);border-radius:8px;
+  padding:10px 14px;text-align:left;width:100%;margin-top:12px;
+  border-left:3px solid var(--teal);color:var(--teal);line-height:1.6;
+  white-space:pre-wrap;max-height:100px;overflow-y:auto;
+}
+.card-tap-hint{margin-top:14px;font-family:var(--mono);font-size:0.65rem;color:var(--text3);}
+
+.fc-controls{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px;}
+.nav-btn{
+  width:46px;height:46px;border-radius:50%;border:1px solid var(--border);
+  background:var(--s2);color:var(--text);font-size:1.1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+}
+.nav-btn:hover{border-color:var(--accent-g);transform:scale(1.06);}
+.flip-btn{
+  padding:13px 38px;border-radius:12px;border:none;
+  background:var(--accent);color:#fff;
+  font-family:var(--sans);font-weight:700;font-size:0.88rem;
+  cursor:pointer;transition:all 0.18s;
+  box-shadow:0 4px 18px rgba(99,102,241,0.3);
+}
+.flip-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(99,102,241,0.4);}
+
+.conf-row{display:flex;gap:10px;justify-content:center;}
+.conf-btn{
+  flex:1;max-width:130px;padding:10px;border-radius:10px;
+  font-family:var(--sans);font-weight:700;font-size:0.78rem;
+  cursor:pointer;transition:all 0.15s;border:1px solid;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.conf-again{border-color:var(--rose);background:rgba(251,113,133,0.08);color:var(--rose);}
+.conf-hard{border-color:var(--amber);background:rgba(251,191,36,0.08);color:var(--amber);}
+.conf-good{border-color:var(--green);background:rgba(52,211,153,0.08);color:var(--green);}
+.conf-btn:hover{transform:translateY(-2px);filter:brightness(1.15);}
+
+/* QUIZ */
+.quiz-qcard{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;border-top:3px solid var(--accent);}
+.quiz-qlabel{font-family:var(--mono);font-size:0.6rem;color:var(--accent-g);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;}
+.quiz-qtext{font-size:1.1rem;font-weight:700;line-height:1.5;margin-bottom:22px;}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.quiz-opt{
+  padding:13px 16px;border:1px solid var(--border);border-radius:10px;
+  background:var(--s1);color:var(--text);font-family:var(--sans);
+  font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.14s;text-align:left;line-height:1.4;
+}
+.quiz-opt:hover:not(.disabled){border-color:var(--accent);background:rgba(99,102,241,0.08);}
+.quiz-opt.correct{border-color:var(--green)!important;background:rgba(52,211,153,0.12)!important;color:var(--green)!important;}
+.quiz-opt.wrong{border-color:var(--rose)!important;background:rgba(251,113,133,0.12)!important;color:var(--rose)!important;}
+.quiz-opt.disabled{cursor:default;}
+.quiz-fb{padding:14px 18px;border-radius:9px;margin-top:14px;font-size:0.85rem;line-height:1.5;display:none;}
+.quiz-fb.show{display:block;}
+.quiz-fb.correct{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:var(--green);}
+.quiz-fb.wrong{background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);color:var(--text);}
+.quiz-fb.wrong b{color:var(--rose);}
+.quiz-next{width:100%;padding:13px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-weight:700;font-size:0.85rem;cursor:pointer;margin-top:14px;display:none;transition:all 0.15s;}
+.quiz-next.show{display:block;}
+.quiz-next:hover{filter:brightness(1.1);}
+.score-strip{display:flex;align-items:center;gap:16px;margin-bottom:16px;font-family:var(--mono);font-size:0.72rem;color:var(--text3);}
+.sc{font-weight:700;} .sc-g{color:var(--green);} .sc-r{color:var(--rose);}
+
+/* MATCH */
+.match-header{display:flex;justify-content:center;gap:40px;margin-bottom:22px;}
+.match-stat{text-align:center;}
+.match-stat-v{font-size:1.6rem;font-weight:800;font-family:var(--mono);color:var(--teal);}
+.match-stat-l{font-size:0.65rem;color:var(--text3);font-family:var(--mono);}
+.match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+.match-tile{
+  padding:14px 10px;border:1px solid var(--border);border-radius:10px;
+  background:var(--s2);color:var(--text);font-family:var(--sans);
+  font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.18s;
+  text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;
+  line-height:1.35;
+}
+.match-tile:hover:not(.matched):not(.wrong-flash){border-color:var(--accent);transform:translateY(-2px);}
+.match-tile.selected{border-color:var(--accent);background:rgba(99,102,241,0.12);box-shadow:0 0 14px rgba(99,102,241,0.25);transform:translateY(-2px);}
+.match-tile.matched{border-color:var(--green);background:rgba(52,211,153,0.08);color:var(--green);opacity:0.6;cursor:default;}
+.match-tile.wrong-flash{border-color:var(--rose);background:rgba(251,113,133,0.12);animation:shake 0.3s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+/* RESULTS */
+.results{text-align:center;padding:48px 24px;display:none;}
+.results.show{display:block;}
+.res-emoji{font-size:3.5rem;margin-bottom:12px;}
+.res-title{font-size:1.8rem;font-weight:800;margin-bottom:6px;}
+.res-sub{color:var(--text2);margin-bottom:28px;font-size:0.88rem;}
+.res-ring{
+  width:110px;height:110px;border-radius:50%;
+  border:4px solid var(--green);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto 28px;box-shadow:0 0 32px rgba(52,211,153,0.25);
+}
+.res-num{font-size:2rem;font-weight:800;font-family:var(--mono);color:var(--green);}
+.res-lbl{font-size:0.65rem;color:var(--text3);}
+
+/* TEST MODE */
+.test-setup{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;border-top:3px solid var(--accent);max-width:480px;margin:0 auto;}
+.test-setup-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.test-setup-row:last-of-type{border-bottom:none;}
+.test-setup-label{font-size:0.82rem;color:var(--text2);font-weight:600;}
+.test-select{
+  background:var(--s3);border:1px solid var(--border2);color:var(--text);
+  font-family:var(--sans);font-size:0.8rem;font-weight:600;padding:7px 10px;border-radius:8px;cursor:pointer;
+}
+.test-type-toggles{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.test-type-chip{display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--text2);cursor:pointer;}
+.test-type-chip input{accent-color:var(--accent);cursor:pointer;}
+
+.test-q{background:var(--s2);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;margin-bottom:14px;}
+.test-q-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px;}
+.test-q-num{font-family:var(--mono);font-size:0.62rem;color:var(--accent-g);text-transform:uppercase;letter-spacing:1.5px;}
+.test-q-type{font-family:var(--mono);font-size:0.6rem;color:var(--text3);background:var(--s3);padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.test-q-text{font-size:1rem;font-weight:700;line-height:1.5;margin-bottom:16px;}
+
+.test-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.test-opt{
+  padding:12px 14px;border:1px solid var(--border2);border-radius:9px;background:var(--s3);
+  color:var(--text);font-family:var(--sans);font-size:0.82rem;text-align:left;cursor:pointer;transition:all 0.15s;
+}
+.test-opt:hover{border-color:var(--accent);background:rgba(99,102,241,0.08);}
+.test-opt.selected{border-color:var(--accent);background:rgba(99,102,241,0.14);}
+.test-opt.g-correct{border-color:var(--green)!important;background:rgba(52,211,153,0.12)!important;color:var(--green)!important;}
+.test-opt.g-wrong{border-color:var(--rose)!important;background:rgba(251,113,133,0.12)!important;color:var(--rose)!important;}
+
+.test-tf{display:flex;gap:10px;}
+.test-tf-btn{flex:1;padding:12px;border:1px solid var(--border2);border-radius:9px;background:var(--s3);color:var(--text);font-family:var(--sans);font-weight:700;font-size:0.82rem;cursor:pointer;transition:all 0.15s;}
+.test-tf-btn:hover{border-color:var(--accent);}
+.test-tf-btn.selected{border-color:var(--accent);background:rgba(99,102,241,0.14);}
+.test-tf-btn.g-correct{border-color:var(--green)!important;background:rgba(52,211,153,0.12)!important;color:var(--green)!important;}
+.test-tf-btn.g-wrong{border-color:var(--rose)!important;background:rgba(251,113,133,0.12)!important;color:var(--rose)!important;}
+
+.test-written-input{
+  width:100%;padding:12px 14px;border:1px solid var(--border2);border-radius:9px;background:var(--s3);
+  color:var(--text);font-family:var(--sans);font-size:0.85rem;
+}
+.test-written-input:focus{outline:none;border-color:var(--accent);}
+.test-written-input.g-correct{border-color:var(--green);background:rgba(52,211,153,0.08);color:var(--green);}
+.test-written-input.g-wrong{border-color:var(--rose);background:rgba(251,113,133,0.08);color:var(--rose);}
+
+.test-q-answer{margin-top:10px;font-size:0.78rem;color:var(--text2);padding-top:10px;border-top:1px dashed var(--border);}
+.test-q-answer b{color:var(--green);}
+.test-q.graded-wrong{border-left:3px solid var(--rose);}
+.test-q.graded-correct{border-left:3px solid var(--green);}
+
+@media (max-width:600px){ .test-opts{grid-template-columns:1fr;} .test-setup-row{flex-direction:column;align-items:flex-start;gap:8px;} .test-type-toggles{align-items:flex-start;} }
+
+/* ══════════════════════════════════
+   MODALS
+══════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(8px);z-index:100;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--s2);border:1px solid var(--border);border-radius:18px;
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  padding:28px;position:relative;
+  animation:modal-in 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes modal-in{from{opacity:0;transform:translateY(16px) scale(0.97);}to{opacity:1;transform:none;}}
+.modal-title{font-size:1.15rem;font-weight:800;margin-bottom:4px;}
+.modal-sub{font-size:0.78rem;color:var(--text2);margin-bottom:22px;}
+.modal-close{
+  position:absolute;top:18px;right:18px;
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;font-size:0.9rem;
+  display:flex;align-items:center;justify-content:center;transition:all 0.12s;
+}
+.modal-close:hover{background:var(--s3);color:var(--text);}
+
+.form-group{margin-bottom:16px;}
+.form-label{font-size:0.72rem;font-family:var(--mono);color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:block;}
+.form-input,.form-textarea,.form-select{
+  width:100%;padding:11px 14px;border-radius:10px;
+  border:1px solid var(--border);background:var(--s1);
+  color:var(--text);font-family:var(--sans);font-size:0.85rem;
+  outline:none;transition:border-color 0.15s;
+}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--accent);}
+.form-textarea{min-height:80px;resize:vertical;line-height:1.5;}
+.form-select{appearance:none;cursor:pointer;}
+.form-select option{background:var(--s2);}
+
+.emoji-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.emoji-opt{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;font-size:1.1rem;cursor:pointer;transition:all 0.12s;
+  display:flex;align-items:center;justify-content:center;
+}
+.emoji-opt:hover,.emoji-opt.selected{border-color:var(--accent);background:rgba(99,102,241,0.12);}
+
+.color-picker{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.color-opt{
+  width:28px;height:28px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:all 0.12s;
+}
+.color-opt.selected{border-color:var(--text);transform:scale(1.15);}
+
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+
+/* Card editor */
+.card-list{max-height:260px;overflow-y:auto;margin-bottom:14px;}
+.card-row{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:8px;
+  padding:10px 0;border-bottom:1px solid var(--border);align-items:start;
+}
+.card-row:last-child{border-bottom:none;}
+.card-field{display:flex;flex-direction:column;gap:4px;position:relative;}
+.card-row textarea{
+  width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s1);color:var(--text);font-family:var(--sans);font-size:0.78rem;
+  outline:none;resize:none;min-height:52px;line-height:1.4;transition:border-color 0.12s;
+}
+.card-row textarea:focus{border-color:var(--accent);}
+.card-row textarea.lang-field{border-color:var(--teal);background:rgba(45,212,191,0.04);}
+.card-row textarea.lang-field:focus{border-color:var(--teal);box-shadow:0 0 0 2px rgba(45,212,191,0.15);}
+.lang-field-toggle{
+  display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:0.6rem;color:var(--text3);
+  cursor:pointer;width:fit-content;padding:2px 0;
+  background:none;border:none;transition:color 0.12s;
+}
+.lang-field-toggle:hover{color:var(--teal);}
+.lang-field-toggle.active{color:var(--teal);}
+.lang-field-toggle .toggle-dot{
+  width:10px;height:10px;border-radius:50%;
+  border:1.5px solid var(--border2);transition:all 0.15s;flex-shrink:0;
+}
+.lang-field-toggle.active .toggle-dot{background:var(--teal);border-color:var(--teal);}
+.del-card-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid rgba(251,113,133,0.25);
+  background:transparent;color:var(--rose);cursor:pointer;font-size:0.8rem;
+  display:flex;align-items:center;justify-content:center;transition:all 0.12s;flex-shrink:0;margin-top:2px;
+}
+.del-card-btn:hover{background:rgba(251,113,133,0.12);}
+.add-card-row-btn{
+  width:100%;padding:10px;border-radius:9px;border:1px dashed var(--border2);
+  background:transparent;color:var(--text3);font-family:var(--sans);font-size:0.8rem;
+  font-weight:600;cursor:pointer;transition:all 0.15s;
+}
+.add-card-row-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+.card-row-header{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:8px;
+  padding:0 0 6px;margin-bottom:4px;border-bottom:1px solid var(--border);
+}
+.card-row-header span{font-family:var(--mono);font-size:0.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;}
+/* inline keyboard popup inside modal */
+.inline-kb{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--s1);border-top:1px solid var(--border);
+  padding:12px 16px 16px;z-index:200;
+  display:none;
+  max-height:55vh;overflow-y:auto;
+}
+.inline-kb.open{display:block;}
+.inline-kb .kb-header{margin-bottom:8px;}
+
+/* FOLDER COLOR DOTS for sidebar */
+.folder-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* empty state */
+.empty-state{
+  text-align:center;padding:60px 20px;color:var(--text3);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+.empty-state .big-icon{font-size:3rem;opacity:0.5;}
+.empty-state p{font-size:0.85rem;max-width:260px;line-height:1.5;}
+
+/* toast */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--s3);border:1px solid var(--border2);
+  border-radius:10px;padding:12px 18px;
+  font-size:0.82rem;font-weight:600;
+  z-index:200;transform:translateY(80px);opacity:0;
+  transition:all 0.25s cubic-bezier(0.4,0,0.2,1);
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{transform:none;opacity:1;}
+
+@media(max-width:680px){
+  .sidebar{display:none;}
+  .quiz-opts{grid-template-columns:1fr;}
+  .match-grid{grid-template-columns:repeat(3,1fr);}
+}
+
+/* ── LANGUAGE KEYBOARD ── */
+.lang-keyboard {
+  margin-top: 14px;
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: none;
+}
+.lang-keyboard.visible { display: block; }
+.kb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.kb-lang-label {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--teal);
+  text-transform: uppercase; letter-spacing: 2px;
+}
+.kb-close {
+  width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--border);
+  background: transparent; color: var(--text3); cursor: pointer; font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center; transition: all 0.12s;
+}
+.kb-close:hover { background: var(--s3); color: var(--text); }
+.kb-rows { display: flex; flex-direction: column; gap: 5px; }
+.kb-row { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.kb-key {
+  min-width: 34px; height: 34px; padding: 0 6px;
+  border-radius: 7px; border: 1px solid var(--border);
+  background: var(--s2); color: var(--text);
+  font-family: var(--sans); font-size: 0.88rem; font-weight: 500;
+  cursor: pointer; transition: all 0.1s;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+}
+.kb-key:hover { background: var(--s3); border-color: var(--accent); color: var(--accent-g); transform: translateY(-1px); }
+.kb-key:active { transform: scale(0.93); }
+.kb-key.kb-wide { min-width: 60px; font-size: 0.72rem; color: var(--text3); }
+.kb-key.kb-space { min-width: 120px; }
+.kb-section-label {
+  width: 100%; font-family: var(--mono); font-size: 0.58rem; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px; margin-bottom: 2px;
+  padding-left: 2px;
+}
+/* deck lang badge */
+.deck-lang-badge {
+  font-family: var(--mono); font-size: 0.6rem; padding: 2px 7px;
+  border-radius: 20px; background: rgba(45,212,191,0.12);
+  border: 1px solid rgba(45,212,191,0.3); color: var(--teal);
+  margin-left: 6px; vertical-align: middle;
+}
+/* lang selector in deck modal */
+.lang-select-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 7px;
+  margin-top: 6px;
+}
+.lang-opt {
+  padding: 9px 10px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--s1); color: var(--text2); cursor: pointer;
+  font-family: var(--sans); font-size: 0.78rem; font-weight: 600;
+  display: flex; align-items: center; gap: 7px; transition: all 0.14s;
+}
+.lang-opt:hover { border-color: var(--border2); color: var(--text); }
+.lang-opt.selected { border-color: var(--teal); background: rgba(45,212,191,0.08); color: var(--teal); }
+.lang-opt .lang-flag { font-size: 1.1rem; }
+.lang-opt.no-lang { border-style: dashed; }
+
+
+/* ══ PROGRESS DASHBOARD ══ */
+.progress-dashboard {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;
+  margin-bottom:22px;
+}
+.stat-tile {
+  background:var(--s2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;position:relative;overflow:hidden;
+}
+.stat-tile::before {
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--tile-color,var(--accent));
+}
+.stat-tile-icon{font-size:1.2rem;margin-bottom:6px;}
+.stat-tile-val{font-size:1.5rem;font-weight:800;font-family:var(--mono);color:var(--text);}
+.stat-tile-lbl{font-size:0.65rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
+
+/* needs-work panel */
+.needs-work-panel {
+  background:var(--s2);border:1px solid var(--border);border-radius:14px;
+  padding:18px;margin-bottom:22px;
+}
+.nw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.nw-title{font-size:0.9rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+.nw-badge{
+  font-family:var(--mono);font-size:0.65rem;padding:3px 9px;border-radius:20px;
+  background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.3);color:var(--rose);
+}
+.nw-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+.nw-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  border-radius:9px;background:var(--s1);border:1px solid var(--border);
+  cursor:pointer;transition:all 0.14s;
+}
+.nw-item:hover{border-color:var(--rose);background:rgba(251,113,133,0.04);}
+.nw-item-q{flex:1;font-size:0.8rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nw-item-deck{font-family:var(--mono);font-size:0.6rem;color:var(--text3);flex-shrink:0;}
+.nw-item-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:var(--rose);
+}
+.nw-item-dot.medium{background:var(--amber);}
+.nw-empty{text-align:center;padding:24px;color:var(--text3);font-size:0.82rem;}
+
+/* session summary overlay */
+.session-summary{
+  position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);
+  z-index:150;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.session-summary.open{display:flex;}
+.session-card{
+  background:var(--s2);border:1px solid var(--border);border-radius:20px;
+  padding:32px;max-width:460px;width:100%;text-align:center;
+  animation:modal-in 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.session-title{font-size:1.4rem;font-weight:800;margin-bottom:4px;}
+.session-sub{color:var(--text3);font-size:0.82rem;margin-bottom:24px;}
+.session-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+.ss-stat{background:var(--s1);border-radius:10px;padding:14px 8px;}
+.ss-val{font-size:1.5rem;font-weight:800;font-family:var(--mono);}
+.ss-lbl{font-size:0.62rem;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px;}
+.weak-preview{background:var(--s1);border-radius:10px;padding:12px 14px;margin-bottom:20px;text-align:left;}
+.weak-preview-title{font-size:0.68rem;font-family:var(--mono);color:var(--rose);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;}
+.weak-preview-item{font-size:0.78rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);}
+.weak-preview-item:last-child{border-bottom:none;}
+.session-actions{display:flex;gap:10px;justify-content:center;}
+
+/* deck card progress ring */
+.deck-prog-wrap{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.mini-ring{position:relative;width:32px;height:32px;flex-shrink:0;}
+.mini-ring svg{transform:rotate(-90deg);}
+.mini-ring-num{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:0.55rem;font-family:var(--mono);font-weight:700;color:var(--text2);
+}
+.deck-prog-labels{display:flex;flex-direction:column;gap:1px;}
+.deck-prog-main{font-size:0.72rem;font-weight:700;}
+.deck-prog-sub{font-size:0.6rem;color:var(--text3);}
+.deck-card-stats{display:flex;gap:6px;margin-top:8px;}
+.dcs{font-family:var(--mono);font-size:0.6rem;padding:2px 7px;border-radius:20px;}
+.dcs-g{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.2);}
+.dcs-a{background:rgba(251,191,36,0.1);color:var(--amber);border:1px solid rgba(251,191,36,0.2);}
+.dcs-r{background:rgba(251,113,133,0.1);color:var(--rose);border:1px solid rgba(251,113,133,0.2);}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Flash<span>Vault</span></div>
+    <div class="logo-sub">your study space</div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Folders</div>
+    <div id="folder-list"></div>
+    <button class="new-folder-btn" onclick="openNewFolderModal()">＋ New Folder</button>
+  </div>
+</nav>
+
+<!-- ══ CONTENT ══ -->
+<div class="content">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topbar-title">My Library</div>
+      <div class="topbar-path" id="topbar-path">All folders</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" id="btn-study" onclick="enterStudy()" style="display:none">▶ Study</button>
+      <button class="btn btn-primary" id="btn-new-deck" onclick="openNewDeckModal()">＋ New Deck</button>
+    </div>
+  </div>
+
+  <!-- HOME VIEW -->
+  <div id="view-home" style="padding:28px">
+    <div class="deck-grid" id="deck-grid"></div>
+  </div>
+
+  <!-- STUDY VIEW -->
+  <div id="view-study">
+    <!-- mode tabs -->
+    <div style="padding:20px 28px 0">
+      <div class="mode-tabs">
+        <button class="mode-tab active" onclick="setStudyMode('flashcard')">🃏 Flashcards</button>
+        <button class="mode-tab" onclick="setStudyMode('quiz')">❓ Quiz</button>
+        <button class="mode-tab" onclick="setStudyMode('match')">🔗 Match</button>
+        <button class="mode-tab" onclick="setStudyMode('test')">📝 Test</button>
+      </div>
+    </div>
+    <div style="padding:0 28px 40px">
+
+      <!-- FLASHCARD -->
+      <div id="sm-flashcard">
+        <div class="fc-meta">
+          <div class="fc-counter" id="fc-counter">Card 1 of 1</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" style="font-size:0.75rem;padding:6px 12px" onclick="toggleShuffle()" id="shuffle-btn">⇄ Shuffle</button>
+            <button class="btn btn-ghost" style="font-size:0.75rem;padding:6px 12px" onclick="toggleKeyboard()" id="kb-toggle-btn" title="Toggle language keyboard">⌨️</button>
+          </div>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" id="fc-progress" style="width:0%"></div></div>
+        <div class="card-scene" onclick="flipCard()">
+          <div class="card-inner" id="card-inner">
+            <div class="card-face card-front">
+              <div class="card-tag">Question</div>
+              <div class="card-q" id="fc-q">—</div>
+              <div class="card-tap-hint">click to flip</div>
+            </div>
+            <div class="card-face card-back">
+              <div class="card-tag" id="fc-back-tag">Answer</div>
+              <div class="card-a" id="fc-a">—</div>
+              <div class="card-code-block" id="fc-code" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-controls">
+          <button class="nav-btn" onclick="prevCard()">◀</button>
+          <button class="flip-btn" onclick="flipCard()">Flip</button>
+          <button class="nav-btn" onclick="nextCard()">▶</button>
+        </div>
+
+        <div id="lang-keyboard" class="lang-keyboard">
+          <div class="kb-header">
+            <span class="kb-lang-label" id="kb-lang-name">Korean</span>
+            <button class="kb-close" onclick="toggleKeyboard(false)" title="Hide keyboard">✕</button>
+          </div>
+          <div class="kb-rows" id="kb-rows"></div>
+        </div>
+        <div id="conf-area" style="display:none">
+          <p style="text-align:center;font-size:0.68rem;color:var(--text3);font-family:var(--mono);margin-bottom:8px">How well did you know this?</p>
+          <div class="conf-row">
+            <button class="conf-btn conf-again" onclick="rateCard('again')">✗ Didn't know</button>
+            <button class="conf-btn conf-hard" onclick="rateCard('hard')">~ Almost</button>
+            <button class="conf-btn conf-good" onclick="rateCard('good')">✓ Got it!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUIZ -->
+      <div id="sm-quiz" style="display:none">
+        <div class="score-strip">
+          <span>✓ <span class="sc sc-g" id="q-c">0</span></span>
+          <span>✗ <span class="sc sc-r" id="q-w">0</span></span>
+          <span style="margin-left:auto;font-size:0.7rem" id="q-prog">Question 1</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" id="qz-progress" style="width:0%"></div></div>
+        <div class="quiz-qcard" id="qz-card">
+          <div class="quiz-qlabel">Question</div>
+          <div class="quiz-qtext" id="qz-q">—</div>
+          <div class="quiz-opts" id="qz-opts"></div>
+          <div class="quiz-fb" id="qz-fb"></div>
+          <button class="quiz-next" id="qz-next" onclick="nextQuiz()">Next →</button>
+        </div>
+        <div class="results" id="qz-results">
+          <div class="res-emoji" id="r-emoji">🎉</div>
+          <div class="res-title" id="r-title">Done!</div>
+          <div class="res-sub" id="r-sub"></div>
+          <div class="res-ring"><div class="res-num" id="r-score">0%</div><div class="res-lbl">Score</div></div>
+          <button class="btn btn-primary" onclick="startQuiz()" style="margin:6px">Try Again</button>
+          <button class="btn btn-ghost" onclick="setStudyMode('flashcard')" style="margin:6px">Flashcards</button>
+        </div>
+      </div>
+
+      <!-- MATCH -->
+      <div id="sm-match" style="display:none">
+        <div class="match-header">
+          <div class="match-stat"><div class="match-stat-v" id="mt-time">0.0</div><div class="match-stat-l">seconds</div></div>
+          <div class="match-stat"><div class="match-stat-v" id="mt-pairs" style="color:var(--green)">0/6</div><div class="match-stat-l">matched</div></div>
+          <div class="match-stat"><div class="match-stat-v" id="mt-errors" style="color:var(--rose)">0</div><div class="match-stat-l">errors</div></div>
+        </div>
+        <div class="match-grid" id="mt-grid"></div>
+        <div class="results" id="mt-results">
+          <div class="res-emoji">⚡</div>
+          <div class="res-title">Matched!</div>
+          <div class="res-sub" id="mt-res-sub"></div>
+          <div class="res-ring" style="border-color:var(--amber);box-shadow:0 0 32px rgba(251,191,36,0.2)">
+            <div class="res-num" style="color:var(--amber)" id="mt-final">0s</div>
+            <div class="res-lbl">Time</div>
+          </div>
+          <button class="btn btn-primary" onclick="startMatch()" style="margin:6px">Play Again</button>
+          <button class="btn btn-ghost" onclick="setStudyMode('flashcard')" style="margin:6px">Flashcards</button>
+        </div>
+      </div>
+
+      <!-- TEST -->
+      <div id="sm-test" style="display:none">
+
+        <!-- settings panel, shown before test starts -->
+        <div class="test-setup" id="test-setup">
+          <div class="quiz-qlabel" style="margin-bottom:14px">Test setup</div>
+          <div class="test-setup-row">
+            <span class="test-setup-label">Questions</span>
+            <select id="test-len-select" class="test-select">
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="all">All cards</option>
+            </select>
+          </div>
+          <div class="test-setup-row">
+            <span class="test-setup-label">Question types</span>
+            <div class="test-type-toggles">
+              <label class="test-type-chip"><input type="checkbox" id="tt-mc" checked> Multiple choice</label>
+              <label class="test-type-chip"><input type="checkbox" id="tt-written" checked> Written</label>
+              <label class="test-type-chip"><input type="checkbox" id="tt-tf" checked> True / False</label>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-top:18px" onclick="startTest()">Start Test →</button>
+        </div>
+
+        <!-- score summary, shown after grading -->
+        <div class="results" id="test-results">
+          <div class="res-emoji" id="test-r-emoji">🎉</div>
+          <div class="res-title" id="test-r-title">Done!</div>
+          <div class="res-sub" id="test-r-sub"></div>
+          <div class="res-ring"><div class="res-num" id="test-r-score">0%</div><div class="res-lbl">Score</div></div>
+          <button class="btn btn-primary" onclick="setStudyMode('test')" style="margin:6px">Retake Test</button>
+          <button class="btn btn-ghost" onclick="setStudyMode('flashcard')" style="margin:6px">Flashcards</button>
+        </div>
+
+        <!-- the test itself -->
+        <div id="test-body"></div>
+        <button class="btn btn-primary" id="test-submit-btn" style="width:100%;margin-top:8px;display:none" onclick="submitTest()">Submit Test</button>
+      </div>
+
+    </div>
+  </div>
+</div><!-- end content -->
+</div><!-- end app -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════
+     MODALS
+══════════════════════════════════ -->
+
+<!-- New / Edit Folder -->
+<div class="modal-overlay" id="modal-folder">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-folder')">✕</button>
+    <div class="modal-title" id="mf-title">New Folder</div>
+    <div class="modal-sub">Organise your decks into a folder</div>
+    <div class="form-group">
+      <label class="form-label">Folder Name</label>
+      <input class="form-input" id="mf-name" placeholder="e.g. Computer Science" maxlength="40">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Icon</label>
+      <div class="emoji-picker" id="mf-emoji-picker"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Colour</label>
+      <div class="color-picker" id="mf-color-picker"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-folder')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFolder()">Save Folder</button>
+    </div>
+  </div>
+</div>
+
+<!-- New / Edit Deck -->
+<div class="modal-overlay" id="modal-deck">
+  <div class="modal" style="max-width:640px">
+    <button class="modal-close" onclick="closeModal('modal-deck')">✕</button>
+    <div class="modal-title" id="md-title">New Deck</div>
+    <div class="modal-sub">Add a deck and fill it with flashcards</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Deck Name</label>
+        <input class="form-input" id="md-name" placeholder="e.g. Big-O Notation" maxlength="50">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Folder</label>
+        <select class="form-select" id="md-folder"></select>
+      </div>
+    </div>
+    
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Language Mode <span style="color:var(--text3);font-weight:400">(optional — adds on-screen keyboard while studying)</span></label>
+      <div class="lang-select-grid" id="md-lang-grid"></div>
+    </div>
+    <div class="form-group" style="margin-top:12px">
+      <label class="form-label">Icon</label>
+      <div class="emoji-picker" id="md-emoji-picker"></div>
+    </div>
+
+    <div style="margin:18px 0 8px">
+      <div class="card-row-header">
+        <span>Question / Front</span>
+        <span>Answer / Back</span>
+        <span></span>
+      </div>
+      <div class="card-list" id="md-card-list"></div>
+      <button class="add-card-row-btn" onclick="addCardRow()">＋ Add Card</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-deck')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDeck()">Save Deck</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:2.5rem;margin-bottom:10px">🗑️</div>
+    <div class="modal-title" id="mc-title">Delete?</div>
+    <div class="modal-sub" id="mc-sub">This cannot be undone.</div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="btn btn-danger" id="mc-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// STORAGE & DATA MODEL
+// ══════════════════════════════════════════════════════════════════
+const STORE_KEY = 'flashvault_v2';
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || null; } catch { return null; }
+}
+function save(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+
+// Default data with algorithms content
+const DEFAULT_DATA = {
+  folders: [],
+  decks: [],
+  mastered: {},   // kept for backwards compat
+  progress: {},   // key = deckId_cardId → {good,hard,again,streak,lastSeen,lastRating}
+  sessions: [],   // [{deckId, date, good, hard, again}]
+};
+
+// If saved data contains old pre-built decks (c1/c2 etc.), wipe it so user starts fresh
+const _saved = load();
+const _hasOldData = _saved && _saved.decks && _saved.decks.some(d => d.id === 'd1' || d.id === 'd2');
+if (_hasOldData) { localStorage.removeItem(STORE_KEY); }
+let DB = (!_hasOldData && _saved) ? _saved : JSON.parse(JSON.stringify(DEFAULT_DATA));
+// migrate: ensure progress & sessions exist
+if (!DB.progress) DB.progress = {};
+if (!DB.sessions) DB.sessions = [];
+
+// ══════════════════════════════════════════════════════════════════
+// APP STATE
+// ══════════════════════════════════════════════════════════════════
+let activeFolderId = null; // null = all
+let activeDeckId   = null;
+let studyCards     = [];
+let studyIdx       = 0;
+let isFlipped      = false;
+let shuffleOn      = false;
+let quizCards      = [];
+let quizIdx        = 0;
+let quizCorrect    = 0;
+let quizWrong      = 0;
+let quizAnswered   = false;
+let matchSel       = null;
+let matchPairs     = 0;
+let matchErrors    = 0;
+let matchMatched   = new Set();
+let matchTimer     = null;
+let matchSecs      = 0;
+let matchTiles     = [];
+let matchPairData  = [];
+
+// edit mode tracking
+let editingFolderId = null;
+let editingDeckId   = null;
+let pendingDeleteFn = null;
+
+const FOLDER_EMOJIS = ['💻','📚','🌐','🧪','🎨','🏋️','🎵','📐','🔬','💡','🗺️','⚽','🍳','🌍','✈️','💰','📝','🎮'];
+const FOLDER_COLORS = ['#6366f1','#2dd4bf','#fb7185','#fbbf24','#34d399','#f97316','#a78bfa','#38bdf8','#e879f9','#84cc16'];
+const DECK_EMOJIS   = ['📐','🔍','🔄','📦','🌳','🏔','🃏','❓','📝','🔢','🧠','💡','🌐','🇪🇸','🇫🇷','🇩🇪','🇯🇵','⚡','🔥','✨'];
+
+let selectedFolderEmoji = FOLDER_EMOJIS[0];
+let selectedFolderColor = FOLDER_COLORS[0];
+let selectedDeckEmoji   = DECK_EMOJIS[0];
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER SIDEBAR
+// ══════════════════════════════════════════════════════════════════
+function renderSidebar() {
+  const list = document.getElementById('folder-list');
+  list.innerHTML = '';
+
+  // "All" item
+  const allItem = makeEl('div', 'folder-item' + (activeFolderId === null && !activeDeckId ? ' active' : ''));
+  allItem.innerHTML = `<span class="folder-icon">🗂️</span><span class="folder-name">All Decks</span><span class="folder-count">${DB.decks.length}</span>`;
+  allItem.onclick = () => { activeFolderId = null; activeDeckId = null; renderHome(); };
+  list.appendChild(allItem);
+
+  DB.folders.forEach(f => {
+    const deckCount = DB.decks.filter(d => d.folderId === f.id).length;
+    const item = makeEl('div', 'folder-item' + (activeFolderId === f.id && !activeDeckId ? ' active' : ''));
+    item.innerHTML = `
+      <span class="folder-dot" style="background:${f.color}"></span>
+      <span class="folder-icon">${f.icon}</span>
+      <span class="folder-name">${f.name}</span>
+      <span class="folder-count">${deckCount}</span>
+      <div class="folder-actions">
+        <button class="icon-btn" title="Edit" onclick="event.stopPropagation();editFolder('${f.id}')">✏️</button>
+        <button class="icon-btn" title="Delete" onclick="event.stopPropagation();confirmDelete('folder','${f.id}')">🗑</button>
+      </div>`;
+    item.onclick = () => { activeFolderId = f.id; activeDeckId = null; renderHome(); };
+    list.appendChild(item);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER HOME (deck grid)
+// ══════════════════════════════════════════════════════════════════
+// ── PROGRESS HELPERS ─────────────────────────────────────────────────────
+function getDeckProgress(deck) {
+  let good=0, hard=0, again=0, unseen=0;
+  deck.cards.forEach(c => {
+    const p = DB.progress[deck.id+'_'+c.id];
+    if (!p) { unseen++; return; }
+    if (p.lastRating==='good')  good++;
+    else if (p.lastRating==='hard')  hard++;
+    else if (p.lastRating==='again') again++;
+    else unseen++;
+  });
+  return { good, hard, again, unseen, total: deck.cards.length };
+}
+
+function getWeakCards(limitDecks) {
+  // Returns cards with lastRating=again or (hard with streak<2), sorted by weakness
+  const weak = [];
+  const decks = limitDecks || DB.decks;
+  decks.forEach(deck => {
+    deck.cards.forEach(c => {
+      const key = deck.id + '_' + c.id;
+      const p = DB.progress[key];
+      if (!p) return;
+      if (p.lastRating === 'again') weak.push({deck, card:c, score:0, p});
+      else if (p.lastRating === 'hard' && p.streak < 2) weak.push({deck, card:c, score:1, p});
+    });
+  });
+  return weak.sort((a,b) => a.score - b.score || (b.p.again - a.p.again));
+}
+
+function getAllTimeStats() {
+  let totalCards=0, totalGood=0, totalStudied=0;
+  DB.decks.forEach(deck => {
+    deck.cards.forEach(c => {
+      const p = DB.progress[deck.id+'_'+c.id];
+      if (!p) return;
+      totalStudied++;
+      totalGood += p.good;
+      totalCards++;
+    });
+  });
+  // streak: consecutive days with at least one session
+  const days = new Set(DB.sessions.map(s => new Date(s.date).toDateString()));
+  let streak = 0;
+  const today = new Date();
+  for (let i=0;i<365;i++) {
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    if (days.has(d.toDateString())) streak++;
+    else break;
+  }
+  return { totalStudied, totalGood, streak, sessions: DB.sessions.length };
+}
+
+function miniRing(pct, color) {
+  const r=13, circ=2*Math.PI*r;
+  const fill = (pct/100)*circ;
+  return `<div class="mini-ring">
+    <svg width="32" height="32" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="${r}" fill="none" stroke="var(--border)" stroke-width="3"/>
+      <circle cx="16" cy="16" r="${r}" fill="none" stroke="${color}" stroke-width="3"
+        stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/>
+    </svg>
+    <div class="mini-ring-num">${Math.round(pct)}%</div>
+  </div>`;
+}
+
+function renderNeedsWork(container, weakCards) {
+  if (!weakCards.length) {
+    container.innerHTML = '<div class="nw-empty">✨ No weak cards right now — you\'re on top of it!</div>';
+    return;
+  }
+  container.innerHTML = '';
+  weakCards.slice(0,8).forEach(({deck, card, score, p}) => {
+    const item = document.createElement('div');
+    item.className = 'nw-item';
+    item.innerHTML = `
+      <div class="nw-item-dot ${score===0?'':'medium'}"></div>
+      <div class="nw-item-q">${card.q}</div>
+      <div class="nw-item-deck">${deck.icon} ${deck.name}</div>`;
+    item.onclick = () => openDeck(deck.id);
+    container.appendChild(item);
+  });
+}
+
+function renderProgressDashboard(container, decks) {
+  const stats = getAllTimeStats();
+  const totalCards = decks.reduce((s,d)=>s+d.cards.length,0);
+  const masteredCards = decks.reduce((s,d)=>{
+    return s + d.cards.filter(c=>{
+      const p=DB.progress[d.id+'_'+c.id];
+      return p && p.lastRating==='good' && p.streak>=2;
+    }).length;
+  },0);
+  const weakCards = getWeakCards(decks).length;
+  container.innerHTML = `
+    <div class="stat-tile" style="--tile-color:var(--green)">
+      <div class="stat-tile-icon">✅</div>
+      <div class="stat-tile-val">${masteredCards}</div>
+      <div class="stat-tile-lbl">Mastered</div>
+    </div>
+    <div class="stat-tile" style="--tile-color:var(--rose)">
+      <div class="stat-tile-icon">🔴</div>
+      <div class="stat-tile-val">${weakCards}</div>
+      <div class="stat-tile-lbl">Needs work</div>
+    </div>
+    <div class="stat-tile" style="--tile-color:var(--amber)">
+      <div class="stat-tile-icon">🔥</div>
+      <div class="stat-tile-val">${stats.streak}</div>
+      <div class="stat-tile-lbl">Day streak</div>
+    </div>
+    <div class="stat-tile" style="--tile-color:var(--accent)">
+      <div class="stat-tile-icon">📖</div>
+      <div class="stat-tile-val">${stats.sessions}</div>
+      <div class="stat-tile-lbl">Sessions</div>
+    </div>`;
+}
+
+function renderHome() {
+  // show home, hide study
+  document.getElementById('view-home').style.display = 'block';
+  document.getElementById('view-study').style.display = 'none';
+  document.getElementById('btn-study').style.display = 'none';
+  document.getElementById('btn-new-deck').style.display = '';
+  activeDeckId = null;
+
+  renderSidebar();
+
+  const decks = activeFolderId
+    ? DB.decks.filter(d => d.folderId === activeFolderId)
+    : DB.decks;
+
+  const folder = DB.folders.find(f => f.id === activeFolderId);
+  document.getElementById('topbar-title').textContent = folder ? `${folder.icon} ${folder.name}` : '🗂️ All Decks';
+  document.getElementById('topbar-path').textContent  = folder ? `${decks.length} deck${decks.length!==1?'s':''}` : `${DB.folders.length} folders · ${DB.decks.length} decks`;
+
+  const homeEl = document.getElementById('view-home');
+  homeEl.innerHTML = '';
+
+  // Progress dashboard (only show if there are decks with some history)
+  const hasProgress = decks.some(d => d.cards.some(c => DB.progress[d.id+'_'+c.id]));
+  if (hasProgress) {
+    const dashWrap = document.createElement('div');
+    dashWrap.style.marginBottom = '4px';
+    const dashGrid = document.createElement('div');
+    dashGrid.className = 'progress-dashboard';
+    renderProgressDashboard(dashGrid, decks);
+    dashWrap.appendChild(dashGrid);
+
+    // Needs work panel
+    const weakCards = getWeakCards(decks);
+    if (weakCards.length) {
+      const nwPanel = document.createElement('div');
+      nwPanel.className = 'needs-work-panel';
+      nwPanel.innerHTML = `
+        <div class="nw-header">
+          <div class="nw-title">⚠️ Needs More Practice <span class="nw-badge">${weakCards.length} card${weakCards.length!==1?'s':''}</span></div>
+          <button class="btn btn-ghost" style="font-size:0.72rem;padding:6px 12px" onclick="studyWeakCards()">Study these →</button>
+        </div>
+        <div class="nw-list" id="nw-list"></div>`;
+      dashWrap.appendChild(nwPanel);
+      // render after append
+      setTimeout(() => renderNeedsWork(document.getElementById('nw-list'), weakCards), 0);
+    }
+    homeEl.appendChild(dashWrap);
+  }
+
+  const grid = document.createElement('div');
+  grid.id = 'deck-grid';
+  grid.className = 'deck-grid';
+  homeEl.appendChild(grid);
+
+  if (decks.length === 0 && DB.folders.length === 0 && !activeFolderId) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;padding:70px 20px">
+      <div class="big-icon">✨</div>
+      <div style="font-size:1.2rem;font-weight:800;color:var(--text);margin-bottom:8px">Welcome to FlashVault</div>
+      <p style="max-width:320px">Start by creating a <b style="color:var(--accent-g)">folder</b> for your subject, then add a <b style="color:var(--teal)">deck</b> with your own flashcards.</p>
+      <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center">
+        <button class="btn btn-primary" onclick="openNewFolderModal()">+ Create a Folder</button>
+        <button class="btn btn-ghost" onclick="openNewDeckModal()">+ Skip to New Deck</button>
+      </div>
+    </div>`;
+  } else if (decks.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="big-icon">📭</div>
+      <p>No decks here yet — hit New Deck to add one!</p>
+    </div>`;
+  } else {
+    decks.forEach(deck => {
+      const folder = DB.folders.find(f => f.id === deck.folderId);
+      const color  = folder ? folder.color : '#6366f1';
+      const masteredCount = deck.cards.filter(c => DB.mastered[deck.id + '_' + c.id]).length;
+      const pct = deck.cards.length > 0 ? (masteredCount / deck.cards.length) * 100 : 0;
+
+      const card = makeEl('div', 'deck-card');
+      card.style.setProperty('--deck-color', color);
+      const deckLangKey = deck.lang || 'none';
+      const deckLangBadge = deckLangKey !== 'none' ? `<span class="deck-lang-badge">${LANGUAGES[deckLangKey].flag} ${LANGUAGES[deckLangKey].label}</span>` : '';
+      const prog = getDeckProgress(deck);
+      const progPct = deck.cards.length ? Math.round((prog.good/deck.cards.length)*100) : 0;
+      const ringColor = progPct>=80?'var(--green)':progPct>=40?'var(--amber)':'var(--rose)';
+      card.innerHTML = `
+        <div class="deck-card-icon">${deck.icon}</div>
+        <div class="deck-card-name">${deck.name}${deckLangBadge}</div>
+        <div class="deck-card-count">${deck.cards.length} card${deck.cards.length!==1?'s':''}</div>
+        <div class="deck-prog-wrap">
+          ${miniRing(progPct, ringColor)}
+          <div class="deck-prog-labels">
+            <div class="deck-prog-main">${progPct}% confident</div>
+            <div class="deck-prog-sub">${prog.unseen} unseen</div>
+          </div>
+        </div>
+        <div class="deck-card-stats">
+          ${prog.good  ? `<span class="dcs dcs-g">✓ ${prog.good}</span>`  : ''}
+          ${prog.hard  ? `<span class="dcs dcs-a">~ ${prog.hard}</span>`  : ''}
+          ${prog.again ? `<span class="dcs dcs-r">✗ ${prog.again}</span>` : ''}
+        </div>
+        <div class="deck-card-footer" style="margin-top:8px">
+          <div style="flex:1"></div>
+          <div class="deck-card-actions">
+            <button class="icon-btn" title="Edit" onclick="event.stopPropagation();editDeck('${deck.id}')">✏️</button>
+            <button class="icon-btn" title="Delete" onclick="event.stopPropagation();confirmDelete('deck','${deck.id}')">🗑</button>
+          </div>
+        </div>`;
+      card.onclick = () => openDeck(deck.id);
+      grid.appendChild(card);
+    });
+  }
+
+  // always show "New Deck" card at end
+  const newCard = makeEl('div', 'new-deck-card');
+  newCard.innerHTML = `<div class="plus">＋</div><span>New Deck</span>`;
+  newCard.onclick = openNewDeckModal;
+  grid.appendChild(newCard);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// OPEN DECK → STUDY VIEW
+// ══════════════════════════════════════════════════════════════════
+function studyWeakCards() {
+  // Study all weak cards across visible decks
+  const decks = activeFolderId ? DB.decks.filter(d=>d.folderId===activeFolderId) : DB.decks;
+  const weak = getWeakCards(decks);
+  if (!weak.length) { showToast('No weak cards to study!'); return; }
+  // find the deck with most weak cards to "open"
+  const deckCounts = {};
+  weak.forEach(({deck}) => deckCounts[deck.id] = (deckCounts[deck.id]||0)+1);
+  const topDeckId = Object.entries(deckCounts).sort((a,b)=>b[1]-a[1])[0][0];
+  const topDeck = DB.decks.find(d=>d.id===topDeckId);
+  activeDeckId = topDeckId;
+  studyCards = weak.map(w=>w.card);
+  sessionRatings = [];
+  studyIdx = 0; isFlipped = false; shuffleOn = false;
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-study').style.display = 'block';
+  document.getElementById('btn-study').style.display = '';
+  document.getElementById('btn-new-deck').style.display = 'none';
+  document.getElementById('topbar-title').innerHTML = '⚠️ Weak Cards';
+  document.getElementById('topbar-path').textContent = `${studyCards.length} cards that need work`;
+  document.getElementById('lang-keyboard').classList.remove('visible');
+  renderSidebar();
+  setStudyMode('flashcard');
+  showToast(`Studying ${studyCards.length} weak card${studyCards.length!==1?'s':''}! 💪`);
+}
+
+function openDeck(deckId) {
+  activeDeckId = deckId;
+  const deck = DB.decks.find(d => d.id === deckId);
+  if (!deck || !deck.cards.length) { showToast('This deck has no cards yet! Edit it to add some.'); return; }
+
+  studyCards = [...deck.cards];
+  sessionRatings = [];
+  studyIdx = 0; isFlipped = false; shuffleOn = false;
+
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-study').style.display = 'block';
+  document.getElementById('btn-study').style.display = '';
+  document.getElementById('btn-new-deck').style.display = 'none';
+
+  // Show language badge in topbar if deck has a language
+  const langKey = deck.lang || 'none';
+  const langInfo = LANGUAGES[langKey];
+  const langBadge = (langKey !== 'none') ? `<span class="deck-lang-badge">${langInfo.flag} ${langInfo.label}</span>` : '';
+  document.getElementById('topbar-title').innerHTML = `${deck.icon} ${deck.name}${langBadge}`;
+  const prog = getDeckProgress(deck);
+  const progPct2 = deck.cards.length ? Math.round((prog.good/deck.cards.length)*100) : 0;
+  document.getElementById('topbar-path').innerHTML = `${deck.cards.length} cards · <span style="color:var(--green)">${progPct2}% confident</span>${prog.again?` · <span style="color:var(--rose)">${prog.again} to retry</span>`:''}`;
+  document.getElementById('shuffle-btn').classList.remove('on');
+
+  // Build keyboard if language deck
+  if (langKey !== 'none') {
+    buildKeyboard(langKey);
+  } else {
+    document.getElementById('lang-keyboard').classList.remove('visible');
+  }
+
+  renderSidebar();
+  setStudyMode('flashcard');
+}
+
+function enterStudy() { /* already in study */ }
+
+// ══════════════════════════════════════════════════════════════════
+// STUDY MODES
+// ══════════════════════════════════════════════════════════════════
+function setStudyMode(mode) {
+  ['flashcard','quiz','match','test'].forEach(m => {
+    document.getElementById('sm-'+m).style.display = m === mode ? 'block' : 'none';
+    document.querySelectorAll('.mode-tab')[['flashcard','quiz','match','test'].indexOf(m)]
+      .classList.toggle('active', m === mode);
+  });
+  if (mode === 'flashcard') { loadCard(); }
+  else if (mode === 'quiz') { startQuiz(); }
+  else if (mode === 'match') { startMatch(); }
+  else { resetTestView(); }
+}
+
+// ── FLASHCARD ──
+function loadCard() {
+  if (!studyCards.length) return;
+  const card = studyCards[studyIdx];
+  document.getElementById('fc-q').textContent = card.q;
+  document.getElementById('fc-a').textContent = card.a;
+  const codeEl = document.getElementById('fc-code');
+  if (card.code) { codeEl.style.display = 'block'; codeEl.textContent = card.code; }
+  else { codeEl.style.display = 'none'; }
+  document.getElementById('fc-progress').style.width = ((studyIdx+1)/studyCards.length*100)+'%';
+  document.getElementById('fc-counter').textContent = `Card ${studyIdx+1} of ${studyCards.length}`;
+  isFlipped = false;
+  document.getElementById('card-inner').classList.remove('flipped');
+  document.getElementById('conf-area').style.display = 'none';
+
+  // Update language tag on back of card
+  const deck = DB.decks.find(d => d.id === activeDeckId);
+  const langKey = deck ? (deck.lang || 'none') : 'none';
+  const backTag = document.getElementById('fc-back-tag');
+  if (backTag) {
+    if (langKey !== 'none') {
+      const lInfo = LANGUAGES[langKey];
+      backTag.textContent = lInfo.flag + ' ' + lInfo.label;
+    } else {
+      backTag.textContent = 'Answer';
+    }
+  }
+  // Show keyboard immediately if front side has lang
+  const thisCard = studyCards[studyIdx];
+  if (langKey !== 'none' && thisCard && thisCard.qLang) {
+    buildKeyboard(langKey);
+  } else if (langKey !== 'none' && thisCard && !thisCard.qLang) {
+    document.getElementById('lang-keyboard').classList.remove('visible');
+  }
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('card-inner').classList.toggle('flipped', isFlipped);
+  document.getElementById('conf-area').style.display = isFlipped ? 'block' : 'none';
+  // Show/hide study keyboard based on which side is now showing
+  showStudyKeyboardForCurrentSide();
+}
+
+function showStudyKeyboardForCurrentSide() {
+  const deck = DB.decks.find(d => d.id === activeDeckId);
+  if (!deck || !deck.lang || deck.lang === 'none') return;
+  const card = studyCards[studyIdx];
+  const needsKb = isFlipped ? (card.aLang || false) : (card.qLang || false);
+  if (needsKb) {
+    buildKeyboard(deck.lang);
+  } else {
+    document.getElementById('lang-keyboard').classList.remove('visible');
+  }
+}
+
+function nextCard() { studyIdx = (studyIdx+1) % studyCards.length; loadCard(); }
+function prevCard() { studyIdx = (studyIdx-1+studyCards.length) % studyCards.length; loadCard(); }
+
+// session tracking
+let sessionRatings = []; // {cardId, rating, q} for current session
+
+function rateCard(rating) {
+  if (activeDeckId) {
+    const card = studyCards[studyIdx];
+    const key = activeDeckId + '_' + card.id;
+    // update rich progress
+    if (!DB.progress[key]) DB.progress[key] = {good:0,hard:0,again:0,streak:0,lastSeen:null,lastRating:null};
+    const p = DB.progress[key];
+    p.lastRating = rating;
+    p.lastSeen = Date.now();
+    if (rating === 'good')  { p.good++;  p.streak++; }
+    if (rating === 'hard')  { p.hard++;  p.streak = Math.max(0, p.streak-1); }
+    if (rating === 'again') { p.again++; p.streak = 0; }
+    // legacy compat
+    DB.mastered[key] = (rating === 'good');
+    sessionRatings.push({cardId: card.id, rating, q: card.q});
+    save(DB);
+  }
+  // if this was the last card, show session summary
+  if (studyIdx >= studyCards.length - 1) {
+    setTimeout(showSessionSummary, 300);
+  } else {
+    nextCard();
+  }
+}
+
+function showSessionSummary() {
+  const got   = sessionRatings.filter(r=>r.rating==='good').length;
+  const hard  = sessionRatings.filter(r=>r.rating==='hard').length;
+  const again = sessionRatings.filter(r=>r.rating==='again').length;
+  const total = sessionRatings.length;
+
+  // save session
+  DB.sessions.push({ deckId: activeDeckId, date: Date.now(), good: got, hard, again });
+  if (DB.sessions.length > 100) DB.sessions = DB.sessions.slice(-100);
+  save(DB);
+
+  document.getElementById('ss-got').textContent   = got;
+  document.getElementById('ss-hard').textContent  = hard;
+  document.getElementById('ss-again').textContent = again;
+
+  const pct = total ? Math.round(got/total*100) : 0;
+  const [emoji, title] = pct>=90?['🏆','Outstanding!']:pct>=70?['🎉','Great session!']:pct>=50?['👍','Good effort!']:['📚','Keep grinding!'];
+  document.getElementById('ss-emoji').textContent = emoji;
+  document.getElementById('ss-title').textContent = title;
+  document.getElementById('ss-sub').textContent   = `${total} card${total!==1?'s':''} reviewed · ${pct}% got it`;
+
+  // show weak cards
+  const weakCards = sessionRatings.filter(r=>r.rating==='again'||r.rating==='hard');
+  const weakEl = document.getElementById('ss-weak');
+  const weakList = document.getElementById('ss-weak-list');
+  if (weakCards.length) {
+    weakEl.style.display = 'block';
+    weakList.innerHTML = weakCards.slice(0,5).map(w =>
+      `<div class="weak-preview-item">${w.rating==='again'?'🔴':'🟡'} ${w.q.substring(0,60)}${w.q.length>60?'…':''}</div>`
+    ).join('') + (weakCards.length>5 ? `<div class="weak-preview-item" style="color:var(--text3)">…and ${weakCards.length-5} more</div>` : '');
+    document.getElementById('ss-retry-btn').style.display = '';
+  } else {
+    weakEl.style.display = 'none';
+    document.getElementById('ss-retry-btn').style.display = 'none';
+  }
+
+  document.getElementById('session-summary').classList.add('open');
+}
+
+function closeSessionSummary() {
+  document.getElementById('session-summary').classList.remove('open');
+  sessionRatings = [];
+  // reset to first card
+  studyIdx = 0;
+  loadCard();
+}
+
+function retryWeak() {
+  document.getElementById('session-summary').classList.remove('open');
+  // filter to only again/hard cards
+  const weakIds = new Set(sessionRatings.filter(r=>r.rating!=='good').map(r=>r.cardId));
+  const allCards = DB.decks.find(d=>d.id===activeDeckId)?.cards || [];
+  studyCards = allCards.filter(c => weakIds.has(c.id));
+  sessionRatings = [];
+  studyIdx = 0;
+  isFlipped = false;
+  loadCard();
+  showToast(`Studying ${studyCards.length} weak card${studyCards.length!==1?'s':''}! 💪`);
+}
+
+function toggleShuffle() {
+  shuffleOn = !shuffleOn;
+  document.getElementById('shuffle-btn').classList.toggle('on', shuffleOn);
+  studyCards = shuffleOn
+    ? [...studyCards].sort(() => Math.random()-0.5)
+    : DB.decks.find(d => d.id === activeDeckId)?.cards || studyCards;
+  studyIdx = 0;
+  loadCard();
+}
+
+// ── QUIZ ──
+function startQuiz() {
+  quizCards = [...studyCards].sort(() => Math.random()-0.5);
+  quizIdx=0; quizCorrect=0; quizWrong=0; quizAnswered=false;
+  document.getElementById('qz-card').style.display = 'block';
+  document.getElementById('qz-results').classList.remove('show');
+  loadQuiz();
+}
+
+function loadQuiz() {
+  if (quizIdx >= quizCards.length) { showQuizResults(); return; }
+  const card = quizCards[quizIdx];
+  document.getElementById('qz-q').textContent = card.q;
+  const others = studyCards.filter(c => c.id !== card.id).sort(() => Math.random()-0.5).slice(0,3);
+  const opts = [...others, card].sort(() => Math.random()-0.5);
+  const optsEl = document.getElementById('qz-opts');
+  optsEl.innerHTML = '';
+  opts.forEach(opt => {
+    const b = makeEl('button','quiz-opt');
+    b.textContent = opt.a.substring(0,90)+(opt.a.length>90?'…':'');
+    b.onclick = () => answerQuiz(b, opt.id === card.id, card.a);
+    optsEl.appendChild(b);
+  });
+  document.getElementById('qz-fb').className = 'quiz-fb';
+  document.getElementById('qz-next').className = 'quiz-next';
+  quizAnswered = false;
+  document.getElementById('qz-progress').style.width = (quizIdx/quizCards.length*100)+'%';
+  document.getElementById('q-c').textContent = quizCorrect;
+  document.getElementById('q-w').textContent = quizWrong;
+  document.getElementById('q-prog').textContent = `Q ${quizIdx+1}/${quizCards.length}`;
+}
+
+function answerQuiz(btn, correct, correctAns) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+  document.querySelectorAll('.quiz-opt').forEach(b => b.classList.add('disabled'));
+  const fb = document.getElementById('qz-fb');
+  if (correct) {
+    btn.classList.add('correct');
+    fb.className = 'quiz-fb correct show';
+    fb.innerHTML = '✓ Correct!';
+    quizCorrect++;
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'quiz-fb wrong show';
+    fb.innerHTML = `✗ Not quite. <b>Answer:</b> ${correctAns}`;
+    quizWrong++;
+    document.querySelectorAll('.quiz-opt').forEach(b => {
+      if (b.textContent.startsWith(correctAns.substring(0,20))) b.classList.add('correct');
+    });
+  }
+  document.getElementById('q-c').textContent = quizCorrect;
+  document.getElementById('q-w').textContent = quizWrong;
+  document.getElementById('qz-next').className = 'quiz-next show';
+}
+
+function nextQuiz() { quizIdx++; loadQuiz(); }
+
+function showQuizResults() {
+  document.getElementById('qz-card').style.display = 'none';
+  document.getElementById('qz-results').classList.add('show');
+  const total = quizCorrect+quizWrong;
+  const pct = total ? Math.round(quizCorrect/total*100) : 0;
+  document.getElementById('r-score').textContent = pct+'%';
+  const [emoji,title] = pct>=90?['🏆','Outstanding!']:pct>=75?['🎉','Great Work!']:pct>=60?['👍','Good Effort!']:['😅','Keep Going!'];
+  document.getElementById('r-emoji').textContent = emoji;
+  document.getElementById('r-title').textContent = title;
+  document.getElementById('r-sub').textContent = `${quizCorrect} correct out of ${total}`;
+}
+
+// ── MATCH ──
+function startMatch() {
+  clearInterval(matchTimer);
+  matchSecs=0; matchPairs=0; matchErrors=0; matchSel=null; matchMatched=new Set();
+  document.getElementById('mt-results').classList.remove('show');
+  document.getElementById('mt-grid').style.display='grid';
+  const pool = [...studyCards].sort(()=>Math.random()-0.5).slice(0,6);
+  matchPairData = pool;
+  document.getElementById('mt-pairs').textContent = `0/${pool.length}`;
+  matchTiles = [
+    ...pool.map((c,i)=>({id:i,type:'q',text:c.q.substring(0,55)+(c.q.length>55?'…':'')})),
+    ...pool.map((c,i)=>({id:i,type:'a',text:c.a.substring(0,55)+(c.a.length>55?'…':'')})),
+  ].sort(()=>Math.random()-0.5);
+  const grid = document.getElementById('mt-grid');
+  grid.innerHTML='';
+  matchTiles.forEach((t,idx) => {
+    const el = makeEl('div','match-tile');
+    el.textContent = t.text;
+    el.dataset.idx = idx;
+    el.onclick = () => clickTile(el, t);
+    grid.appendChild(el);
+  });
+  matchTimer = setInterval(()=>{ matchSecs+=0.1; document.getElementById('mt-time').textContent=matchSecs.toFixed(1); }, 100);
+  document.getElementById('mt-errors').textContent=0;
+}
+
+function clickTile(el, t) {
+  if (el.classList.contains('matched')||el.classList.contains('wrong-flash')) return;
+  if (!matchSel) { matchSel={el,t}; el.classList.add('selected'); return; }
+  if (matchSel.el===el) { el.classList.remove('selected'); matchSel=null; return; }
+  const a=matchSel, b={el,t};
+  a.el.classList.remove('selected');
+  if (a.t.id===b.t.id && a.t.type!==b.t.type) {
+    a.el.classList.add('matched'); b.el.classList.add('matched');
+    matchPairs++;
+    document.getElementById('mt-pairs').textContent=`${matchPairs}/${matchPairData.length}`;
+    if (matchPairs===matchPairData.length) { clearInterval(matchTimer); setTimeout(showMatchResults,400); }
+  } else {
+    matchErrors++;
+    a.el.classList.add('wrong-flash'); b.el.classList.add('wrong-flash');
+    setTimeout(()=>{ a.el.classList.remove('wrong-flash'); b.el.classList.remove('wrong-flash'); }, 400);
+    document.getElementById('mt-errors').textContent=matchErrors;
+  }
+  matchSel=null;
+}
+
+function showMatchResults() {
+  document.getElementById('mt-grid').style.display='none';
+  document.getElementById('mt-results').classList.add('show');
+  document.getElementById('mt-final').textContent=matchSecs.toFixed(1)+'s';
+  document.getElementById('mt-res-sub').textContent = matchErrors===0?'🔥 Perfect run!':
+    matchErrors<=3?`Nice — only ${matchErrors} error${matchErrors>1?'s':''}!`:
+    `Finished with ${matchErrors} errors. Practice makes perfect!`;
+}
+
+// ── TEST (Quizlet-style mixed test) ──
+let testQuestions = [];
+let testGraded = false;
+
+function resetTestView() {
+  document.getElementById('test-setup').style.display = 'block';
+  document.getElementById('test-results').classList.remove('show');
+  document.getElementById('test-body').innerHTML = '';
+  document.getElementById('test-submit-btn').style.display = 'none';
+  testQuestions = [];
+  testGraded = false;
+}
+
+function normalizeAns(s) {
+  return (s || '').toLowerCase().trim().replace(/[.,!?;:'"()]/g, '').replace(/\s+/g, ' ');
+}
+
+// small edit-distance check so trivial typos aren't marked wrong
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n; if (!n) return m;
+  const dp = Array.from({length: m + 1}, (_, i) => [i, ...Array(n).fill(0)]);
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+    dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  }
+  return dp[m][n];
+}
+function writtenIsCorrect(user, correct) {
+  const u = normalizeAns(user), c = normalizeAns(correct);
+  if (!u) return false;
+  if (u === c) return true;
+  return c.length > 3 && levenshtein(u, c) <= 1;
+}
+
+function startTest() {
+  if (!studyCards.length) return;
+  const lenSel = document.getElementById('test-len-select').value;
+  const useMC = document.getElementById('tt-mc').checked;
+  const useWritten = document.getElementById('tt-written').checked;
+  const useTF = document.getElementById('tt-tf').checked;
+  const types = [useMC && 'mc', useWritten && 'written', useTF && 'tf'].filter(Boolean);
+  if (!types.length) { showToast('Pick at least one question type'); return; }
+
+  const pool = [...studyCards].sort(() => Math.random() - 0.5);
+  const count = lenSel === 'all' ? pool.length : Math.min(parseInt(lenSel, 10), pool.length);
+  const chosen = pool.slice(0, count);
+
+  testQuestions = chosen.map(card => {
+    const type = types[Math.floor(Math.random() * types.length)];
+    if (type === 'mc') {
+      const others = studyCards.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5).slice(0, 3);
+      const options = [...others, card].sort(() => Math.random() - 0.5);
+      return {type, card, options, userAns: null};
+    }
+    if (type === 'tf') {
+      const showCorrect = Math.random() < 0.5;
+      let shownAnswer = card.a;
+      if (!showCorrect) {
+        const decoy = studyCards.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5)[0];
+        shownAnswer = decoy ? decoy.a : card.a;
+      }
+      return {type, card, shownAnswer, isTrue: showCorrect, userAns: null};
+    }
+    return {type: 'written', card, userAns: ''};
+  });
+  testGraded = false;
+  document.getElementById('test-setup').style.display = 'none';
+  document.getElementById('test-results').classList.remove('show');
+  document.getElementById('test-submit-btn').style.display = 'block';
+  renderTest();
+}
+
+function renderTest() {
+  const body = document.getElementById('test-body');
+  body.innerHTML = '';
+  const typeLabel = {mc: 'Multiple choice', written: 'Written', tf: 'True / False'};
+  testQuestions.forEach((q, i) => {
+    const wrap = makeEl('div', 'test-q');
+    wrap.id = 'test-q-' + i;
+    const head = makeEl('div', 'test-q-head');
+    head.innerHTML = `<span class="test-q-num">Question ${i+1} of ${testQuestions.length}</span><span class="test-q-type">${typeLabel[q.type]}</span>`;
+    wrap.appendChild(head);
+    const qt = makeEl('div', 'test-q-text');
+    qt.textContent = q.card.q;
+    wrap.appendChild(qt);
+
+    if (q.type === 'mc') {
+      const optsWrap = makeEl('div', 'test-opts');
+      q.options.forEach(opt => {
+        const b = makeEl('button', 'test-opt');
+        b.textContent = opt.a.substring(0, 90) + (opt.a.length > 90 ? '…' : '');
+        b.onclick = () => {
+          if (testGraded) return;
+          q.userAns = opt.id;
+          optsWrap.querySelectorAll('.test-opt').forEach(el => el.classList.remove('selected'));
+          b.classList.add('selected');
+        };
+        optsWrap.appendChild(b);
+      });
+      wrap.appendChild(optsWrap);
+    } else if (q.type === 'tf') {
+      const stmt = makeEl('div', 'test-q-text');
+      stmt.style.cssText = 'font-weight:400;font-size:0.88rem;color:var(--text2);margin-top:-8px';
+      stmt.innerHTML = `Proposed answer: <b style="color:var(--text)">${q.shownAnswer}</b>`;
+      wrap.appendChild(stmt);
+      const tfWrap = makeEl('div', 'test-tf');
+      [['True', true], ['False', false]].forEach(([label, val]) => {
+        const b = makeEl('button', 'test-tf-btn');
+        b.textContent = label;
+        b.onclick = () => {
+          if (testGraded) return;
+          q.userAns = val;
+          tfWrap.querySelectorAll('.test-tf-btn').forEach(el => el.classList.remove('selected'));
+          b.classList.add('selected');
+        };
+        tfWrap.appendChild(b);
+      });
+      wrap.appendChild(tfWrap);
+    } else {
+      const input = makeEl('input', 'test-written-input');
+      input.type = 'text';
+      input.placeholder = 'Type your answer…';
+      input.oninput = () => { q.userAns = input.value; };
+      wrap.appendChild(input);
+    }
+    body.appendChild(wrap);
+  });
+}
+
+function submitTest() {
+  if (testGraded) return;
+  const unanswered = testQuestions.filter(q => q.userAns === null || q.userAns === '').length;
+  if (unanswered > 0 && !confirm(`${unanswered} question${unanswered>1?'s are':' is'} unanswered. Submit anyway?`)) return;
+
+  testGraded = true;
+  let correctCount = 0;
+  testQuestions.forEach((q, i) => {
+    const wrap = document.getElementById('test-q-' + i);
+    let isCorrect = false;
+    if (q.type === 'mc') {
+      wrap.querySelectorAll('.test-opt').forEach(el => el.style.pointerEvents = 'none');
+      const opts = [...wrap.querySelectorAll('.test-opt')];
+      opts.forEach((el, idx) => {
+        const opt = q.options[idx];
+        if (opt.id === q.card.id) el.classList.add('g-correct');
+        else if (opt.id === q.userAns) el.classList.add('g-wrong');
+      });
+      isCorrect = q.userAns === q.card.id;
+    } else if (q.type === 'tf') {
+      wrap.querySelectorAll('.test-tf-btn').forEach(el => el.style.pointerEvents = 'none');
+      const btns = [...wrap.querySelectorAll('.test-tf-btn')];
+      const correctVal = q.isTrue;
+      btns.forEach(el => {
+        const isTrueBtn = el.textContent === 'True';
+        if (isTrueBtn === correctVal) el.classList.add('g-correct');
+        else if (el.classList.contains('selected')) el.classList.add('g-wrong');
+      });
+      isCorrect = q.userAns === correctVal;
+      if (!correctVal) {
+        const note = makeEl('div', 'test-q-answer');
+        note.innerHTML = `Correct answer: <b>${q.card.a}</b>`;
+        wrap.appendChild(note);
+      }
+    } else {
+      const input = wrap.querySelector('.test-written-input');
+      input.disabled = true;
+      isCorrect = writtenIsCorrect(q.userAns, q.card.a);
+      input.classList.add(isCorrect ? 'g-correct' : 'g-wrong');
+      if (!isCorrect) {
+        const note = makeEl('div', 'test-q-answer');
+        note.innerHTML = `Correct answer: <b>${q.card.a}</b>`;
+        wrap.appendChild(note);
+      }
+    }
+    wrap.classList.add(isCorrect ? 'graded-correct' : 'graded-wrong');
+    if (isCorrect) correctCount++;
+  });
+
+  document.getElementById('test-submit-btn').style.display = 'none';
+  const total = testQuestions.length;
+  const pct = total ? Math.round(correctCount / total * 100) : 0;
+  const [emoji, title] = pct >= 90 ? ['🏆', 'Outstanding!'] : pct >= 75 ? ['🎉', 'Great Work!'] : pct >= 60 ? ['👍', 'Good Effort!'] : ['😅', 'Keep Going!'];
+  document.getElementById('test-r-emoji').textContent = emoji;
+  document.getElementById('test-r-title').textContent = title;
+  document.getElementById('test-r-sub').textContent = `${correctCount} correct out of ${total}`;
+  document.getElementById('test-r-score').textContent = pct + '%';
+  document.getElementById('test-results').classList.add('show');
+  document.getElementById('test-results').scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MODAL HELPERS
+// ══════════════════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function buildEmojiPicker(containerId, emojis, selectedVal, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  emojis.forEach(e => {
+    const btn = makeEl('button','emoji-opt'+(e===selectedVal?' selected':''));
+    btn.textContent = e;
+    btn.onclick = () => {
+      container.querySelectorAll('.emoji-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onSelect(e);
+    };
+    container.appendChild(btn);
+  });
+}
+
+function buildColorPicker(containerId, colors, selectedVal, onSelect) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  colors.forEach(c => {
+    const btn = makeEl('button','color-opt'+(c===selectedVal?' selected':''));
+    btn.style.background = c;
+    btn.onclick = () => {
+      container.querySelectorAll('.color-opt').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onSelect(c);
+    };
+    container.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// FOLDER CRUD
+// ══════════════════════════════════════════════════════════════════
+function openNewFolderModal() {
+  editingFolderId = null;
+  selectedFolderEmoji = FOLDER_EMOJIS[0];
+  selectedFolderColor = FOLDER_COLORS[0];
+  document.getElementById('mf-title').textContent = 'New Folder';
+  document.getElementById('mf-name').value = '';
+  buildEmojiPicker('mf-emoji-picker', FOLDER_EMOJIS, selectedFolderEmoji, e => selectedFolderEmoji=e);
+  buildColorPicker('mf-color-picker', FOLDER_COLORS, selectedFolderColor, c => selectedFolderColor=c);
+  openModal('modal-folder');
+  setTimeout(()=>document.getElementById('mf-name').focus(),100);
+}
+
+function editFolder(id) {
+  editingFolderId = id;
+  const f = DB.folders.find(x=>x.id===id);
+  selectedFolderEmoji = f.icon;
+  selectedFolderColor = f.color;
+  document.getElementById('mf-title').textContent = 'Edit Folder';
+  document.getElementById('mf-name').value = f.name;
+  buildEmojiPicker('mf-emoji-picker', FOLDER_EMOJIS, f.icon, e => selectedFolderEmoji=e);
+  buildColorPicker('mf-color-picker', FOLDER_COLORS, f.color, c => selectedFolderColor=c);
+  openModal('modal-folder');
+}
+
+function saveFolder() {
+  const name = document.getElementById('mf-name').value.trim();
+  if (!name) { document.getElementById('mf-name').focus(); return; }
+  if (editingFolderId) {
+    const f = DB.folders.find(x=>x.id===editingFolderId);
+    f.name=name; f.icon=selectedFolderEmoji; f.color=selectedFolderColor;
+  } else {
+    DB.folders.push({ id: uid(), name, icon: selectedFolderEmoji, color: selectedFolderColor });
+  }
+  save(DB); closeModal('modal-folder'); renderHome(); showToast(`Folder "${name}" saved!`);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DECK CRUD
+// ══════════════════════════════════════════════════════════════════
+function openNewDeckModal() {
+  editingDeckId = null;
+  selectedDeckEmoji = DECK_EMOJIS[0];
+  selectedDeckLang = 'none';
+  document.getElementById('md-title').textContent = 'New Deck';
+  document.getElementById('md-name').value = '';
+  buildFolderSelect(activeFolderId);
+  buildEmojiPicker('md-emoji-picker', DECK_EMOJIS, selectedDeckEmoji, e => selectedDeckEmoji=e);
+  buildLangGrid();
+  document.getElementById('md-card-list').innerHTML = '';
+  addCardRow(); addCardRow();
+  openModal('modal-deck');
+  setTimeout(()=>document.getElementById('md-name').focus(),100);
+}
+
+function editDeck(id) {
+  editingDeckId = id;
+  const deck = DB.decks.find(d=>d.id===id);
+  selectedDeckEmoji = deck.icon;
+  selectedDeckLang = deck.lang || 'none';
+  document.getElementById('md-title').textContent = 'Edit Deck';
+  document.getElementById('md-name').value = deck.name;
+  buildFolderSelect(deck.folderId);
+  buildEmojiPicker('md-emoji-picker', DECK_EMOJIS, deck.icon, e => selectedDeckEmoji=e);
+  buildLangGrid();
+  const list = document.getElementById('md-card-list');
+  list.innerHTML = '';
+  deck.cards.forEach(c => addCardRow(c.q, c.a, c.id, c.qLang||false, c.aLang||false));
+  if (!deck.cards.length) addCardRow();
+  openModal('modal-deck');
+}
+
+function buildFolderSelect(selectedId) {
+  const sel = document.getElementById('md-folder');
+  sel.innerHTML = '<option value="">— No folder —</option>';
+  DB.folders.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.id; opt.textContent = `${f.icon} ${f.name}`;
+    if (f.id === selectedId) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function addCardRow(q='', a='', existingId=null, qLang=false, aLang=false) {
+  const list = document.getElementById('md-card-list');
+  const row = makeEl('div','card-row');
+  const cardId = existingId || uid();
+  row.dataset.cardId = cardId;
+
+  // Helper: make a field (textarea + lang toggle button)
+  function makeField(placeholder, value, isLang, side) {
+    const wrap = makeEl('div','card-field');
+    const ta = makeEl('textarea');
+    ta.placeholder = placeholder; ta.value = value;
+    if (isLang) ta.classList.add('lang-field');
+    // Lang toggle button (only show if deck has a language)
+    const togBtn = makeEl('button','lang-field-toggle' + (isLang?' active':''));
+    togBtn.type = 'button';
+    togBtn.dataset.side = side;
+    togBtn.innerHTML = '<span class="toggle-dot"></span><span class="toggle-label">' +
+      (isLang ? (LANGUAGES[selectedDeckLang]?.flag + ' ' + LANGUAGES[selectedDeckLang]?.label + ' keyboard on') : 'use language keyboard') +
+      '</span>';
+    if (selectedDeckLang === 'none') togBtn.style.display = 'none';
+    togBtn.onclick = () => {
+      const on = ta.classList.toggle('lang-field');
+      togBtn.classList.toggle('active', on);
+      togBtn.querySelector('.toggle-label').textContent = on
+        ? (LANGUAGES[selectedDeckLang]?.flag + ' ' + LANGUAGES[selectedDeckLang]?.label + ' keyboard on')
+        : 'use language keyboard';
+    };
+    // Show inline keyboard when focusing a lang-field
+    ta.addEventListener('focus', () => {
+      if (ta.classList.contains('lang-field') && selectedDeckLang !== 'none') {
+        openInlineKb(selectedDeckLang, ta);
+      } else {
+        closeInlineKb();
+      }
+    });
+    wrap.appendChild(ta);
+    wrap.appendChild(togBtn);
+    return wrap;
+  }
+
+  const field1 = makeField('Question / Front…', q, qLang, 'q');
+  const field2 = makeField('Answer / Back…',    a, aLang, 'a');
+  const del = makeEl('button','del-card-btn'); del.textContent='✕'; del.title='Remove';
+  del.onclick = () => { if(list.children.length>1) { closeInlineKb(); row.remove(); } };
+  row.appendChild(field1); row.appendChild(field2); row.appendChild(del);
+  list.appendChild(row);
+}
+
+// Re-render lang toggle labels whenever lang selection changes (called from buildLangGrid)
+function refreshCardRowLangToggles() {
+  const langKey = selectedDeckLang;
+  const langInfo = LANGUAGES[langKey];
+  document.querySelectorAll('.lang-field-toggle').forEach(btn => {
+    btn.style.display = langKey === 'none' ? 'none' : 'flex';
+    const ta = btn.closest('.card-field').querySelector('textarea');
+    const on = ta.classList.contains('lang-field');
+    btn.querySelector('.toggle-label').textContent = on
+      ? (langInfo?.flag + ' ' + langInfo?.label + ' keyboard on')
+      : 'use language keyboard';
+  });
+}
+
+function saveDeck() {
+  const name = document.getElementById('md-name').value.trim();
+  if (!name) { document.getElementById('md-name').focus(); return; }
+  const folderId = document.getElementById('md-folder').value || null;
+  const rows = document.querySelectorAll('#md-card-list .card-row');
+  const cards = [];
+  rows.forEach(row => {
+    const tas = row.querySelectorAll('textarea');
+    const ta1 = tas[0], ta2 = tas[1];
+    if (ta1.value.trim()||ta2.value.trim()) {
+      cards.push({
+        id: row.dataset.cardId,
+        q: ta1.value.trim(),
+        a: ta2.value.trim(),
+        code: '',
+        qLang: ta1.classList.contains('lang-field'),
+        aLang: ta2.classList.contains('lang-field'),
+      });
+    }
+  });
+
+  if (editingDeckId) {
+    const deck = DB.decks.find(d=>d.id===editingDeckId);
+    deck.name=name; deck.icon=selectedDeckEmoji; deck.folderId=folderId; deck.cards=cards; deck.lang=selectedDeckLang;
+  } else {
+    DB.decks.push({ id:uid(), folderId, name, icon:selectedDeckEmoji, cards, lang:selectedDeckLang });
+  }
+  save(DB); closeModal('modal-deck'); renderHome(); showToast(`Deck "${name}" saved!`);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════════════════════════════
+function confirmDelete(type, id) {
+  const name = type==='folder'
+    ? DB.folders.find(f=>f.id===id)?.name
+    : DB.decks.find(d=>d.id===id)?.name;
+  document.getElementById('mc-title').textContent = `Delete "${name}"?`;
+  document.getElementById('mc-sub').textContent = type==='folder'
+    ? 'This will NOT delete the decks inside it.'
+    : 'All cards in this deck will be lost.';
+  document.getElementById('mc-confirm-btn').onclick = () => {
+    if (type==='folder') {
+      DB.folders = DB.folders.filter(f=>f.id!==id);
+      DB.decks.forEach(d=>{ if(d.folderId===id) d.folderId=null; });
+    } else {
+      DB.decks = DB.decks.filter(d=>d.id!==id);
+    }
+    save(DB); closeModal('modal-confirm'); renderHome(); showToast(`Deleted!`);
+  };
+  openModal('modal-confirm');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════
+function uid() { return Math.random().toString(36).slice(2,10); }
+function makeEl(tag, cls='') { const el=document.createElement(tag); if(cls)el.className=cls; return el; }
+
+function showToast(msg, duration=2200) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `✓ ${msg}`;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), duration);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  const inStudy = document.getElementById('view-study').style.display !== 'none';
+  const inModal = document.querySelector('.modal-overlay.open');
+  if (inModal) return;
+  if (!inStudy) return;
+  const activeMode = document.querySelector('.mode-tab.active')?.textContent;
+  if (!activeMode?.includes('Flash')) return;
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') nextCard();
+  else if (e.key==='ArrowLeft'||e.key==='ArrowUp') prevCard();
+  else if (e.key===' ') { e.preventDefault(); flipCard(); }
+  else if (e.key==='1') rateCard('again');
+  else if (e.key==='2') rateCard('hard');
+  else if (e.key==='3') rateCard('good');
+});
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
+});
+
+
+// ══════════════════════════════════════════════════════════════════
+// LANGUAGE DEFINITIONS & KEYBOARD
+// ══════════════════════════════════════════════════════════════════
+const LANGUAGES = {
+  none:   { label: 'None',    flag: '🚫', keys: null },
+  korean: { label: 'Korean', flag: '🇰🇷', composer: true, keys: [
+    { label: 'Consonants (자음) — tap then tap a vowel to form a syllable', keys: ['ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','ㄲ','ㄸ','ㅃ','ㅆ','ㅉ'] },
+    { label: 'Vowels (모음)', keys: ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'] },
+    { label: 'Common words', keys: ['안녕','하다','있다','없다','먹다','마시다','좋다','나쁘다','크다','작다','사람','학생','선생님','학교','집','나','너','우리','이것','저것'] },
+    { label: 'Particles & endings', keys: ['은','는','이','가','을','를','의','에','에서','에게','로','와','과','도','만','부터','까지'] },
+    { label: 'Punctuation', keys: ['。','、','！','？','…','—','～',',','.'] },
+  ]},
+  spanish: { label: 'Spanish', flag: '🇪🇸', keys: [
+    { label: 'Accented vowels', keys: ['á','é','í','ó','ú','Á','É','Í','Ó','Ú'] },
+    { label: 'Special chars',   keys: ['ñ','Ñ','ü','Ü','¿','¡'] },
+  ]},
+  french: { label: 'French', flag: '🇫🇷', keys: [
+    { label: 'Accents aigus / graves', keys: ['à','â','è','é','ê','ë','î','ï','ô','ù','û','ü','ÿ','œ','æ'] },
+    { label: 'Capitals',   keys: ['À','Â','È','É','Ê','Ë','Î','Ï','Ô','Ù','Û','Ü','Ÿ','Œ','Æ'] },
+    { label: 'Special',    keys: ['ç','Ç','«','»','‹','›'] },
+  ]},
+  german: { label: 'German', flag: '🇩🇪', keys: [
+    { label: 'Umlaute',  keys: ['ä','ö','ü','Ä','Ö','Ü'] },
+    { label: 'Special',  keys: ['ß','„','"','»','«'] },
+  ]},
+  japanese: { label: 'Japanese', flag: '🇯🇵', keys: [
+    { label: 'Hiragana vowels', keys: ['あ','い','う','え','お'] },
+    { label: 'か row', keys: ['か','き','く','け','こ','が','ぎ','ぐ','げ','ご'] },
+    { label: 'さ row', keys: ['さ','し','す','せ','そ','ざ','じ','ず','ぜ','ぞ'] },
+    { label: 'た / な row', keys: ['た','ち','つ','て','と','だ','ぢ','づ','で','ど','な','に','ぬ','ね','の'] },
+    { label: 'は / ま row', keys: ['は','ひ','ふ','へ','ほ','ば','び','ぶ','べ','ぼ','ぱ','ぴ','ぷ','ぺ','ぽ','ま','み','む','め','も'] },
+    { label: 'や / ら / わ row', keys: ['や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん','っ','ー'] },
+    { label: 'Katakana vowels', keys: ['ア','イ','ウ','エ','オ'] },
+    { label: 'カ / サ row', keys: ['カ','キ','ク','ケ','コ','サ','シ','ス','セ','ソ'] },
+    { label: 'Common Kanji', keys: ['日','本','語','人','私','食','水','山','川','火','木','金','土','空','時','間','年','月','何','好'] },
+  ]},
+  mandarin: { label: 'Mandarin', flag: '🇨🇳', keys: [
+    { label: 'Tones (a)', keys: ['ā','á','ǎ','à','a'] },
+    { label: 'Tones (e/i/o/u)', keys: ['ē','é','ě','è','ī','í','ǐ','ì','ō','ó','ǒ','ò','ū','ú','ǔ','ù','ǖ','ǘ','ǚ','ǜ'] },
+    { label: 'Common characters', keys: ['你','好','是','不','的','我','他','她','们','有','没','吃','喝','说','来','去','大','小','多','少'] },
+  ]},
+  portuguese: { label: 'Portuguese', flag: '🇵🇹', keys: [
+    { label: 'Accents', keys: ['á','â','ã','à','é','ê','í','ó','ô','õ','ú','ü','ç'] },
+    { label: 'Capitals', keys: ['Á','Â','Ã','À','É','Ê','Í','Ó','Ô','Õ','Ú','Ü','Ç'] },
+  ]},
+  italian: { label: 'Italian', flag: '🇮🇹', keys: [
+    { label: 'Accents', keys: ['à','è','é','ì','í','î','ò','ó','ù','ú'] },
+    { label: 'Capitals', keys: ['À','È','É','Ì','Í','Î','Ò','Ó','Ù','Ú'] },
+  ]},
+};
+
+let selectedDeckLang = 'none';
+let activeKbTarget = null; // the textarea currently being typed into
+
+function buildLangGrid() {
+  const grid = document.getElementById('md-lang-grid');
+  grid.innerHTML = '';
+  Object.entries(LANGUAGES).forEach(([key, lang]) => {
+    const btn = document.createElement('button');
+    btn.className = 'lang-opt' + (key === selectedDeckLang ? ' selected' : '') + (key === 'none' ? ' no-lang' : '');
+    btn.innerHTML = `<span class="lang-flag">${lang.flag}</span>${lang.label}`;
+    btn.onclick = () => {
+      selectedDeckLang = key;
+      grid.querySelectorAll('.lang-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      refreshCardRowLangToggles();
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function buildKeyboard(langKey) {
+  const lang = LANGUAGES[langKey];
+  const kb = document.getElementById('lang-keyboard');
+  const rows = document.getElementById('kb-rows');
+  const nameEl = document.getElementById('kb-lang-name');
+  if (!lang || !lang.keys) { kb.classList.remove('visible'); return; }
+  nameEl.textContent = lang.flag + '  ' + lang.label + ' keyboard';
+  rows.innerHTML = '';
+  lang.keys.forEach(section => {
+    const labelEl = document.createElement('div');
+    labelEl.className = 'kb-section-label';
+    labelEl.textContent = section.label;
+    rows.appendChild(labelEl);
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    section.keys.forEach(ch => {
+      const key = document.createElement('button');
+      key.className = 'kb-key';
+      key.textContent = ch;
+      key.type = 'button';
+      key.onclick = (e) => { e.preventDefault(); insertChar(ch); };
+      row.appendChild(key);
+    });
+    // backspace at end of each section
+    const bs = document.createElement('button');
+    bs.className = 'kb-key kb-wide';
+    bs.textContent = '⌫';
+    bs.type = 'button';
+    bs.onclick = (e) => { e.preventDefault(); deleteChar(); };
+    row.appendChild(bs);
+    rows.appendChild(row);
+  });
+  // space bar row
+  const spaceRow = document.createElement('div');
+  spaceRow.className = 'kb-row';
+  const spaceKey = document.createElement('button');
+  spaceKey.className = 'kb-key kb-space';
+  spaceKey.textContent = 'space';
+  spaceKey.type = 'button';
+  spaceKey.onclick = (e) => { e.preventDefault(); insertChar(' '); };
+  spaceRow.appendChild(spaceKey);
+  rows.appendChild(spaceRow);
+  kb.classList.add('visible');
+}
+
+function toggleKeyboard(show) {
+  const kb = document.getElementById('lang-keyboard');
+  if (show === false) { kb.classList.remove('visible'); }
+  else { kb.classList.toggle('visible'); }
+}
+
+function insertChar(ch) {
+  // Insert into the active input, or the quiz type-in box if present
+  const el = document.activeElement;
+  const target = (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) ? el : activeKbTarget;
+  if (!target) return;
+  const start = target.selectionStart;
+  const end   = target.selectionEnd;
+  const val   = target.value;
+  target.value = val.slice(0, start) + ch + val.slice(end);
+  target.selectionStart = target.selectionEnd = start + ch.length;
+  target.dispatchEvent(new Event('input'));
+  target.focus();
+}
+
+function deleteChar() {
+  const el = document.activeElement;
+  const target = (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) ? el : activeKbTarget;
+  if (!target) return;
+  const start = target.selectionStart;
+  const end   = target.selectionEnd;
+  if (start !== end) {
+    const val = target.value;
+    target.value = val.slice(0, start) + val.slice(end);
+    target.selectionStart = target.selectionEnd = start;
+  } else if (start > 0) {
+    const val = target.value;
+    target.value = val.slice(0, start - 1) + val.slice(start);
+    target.selectionStart = target.selectionEnd = start - 1;
+  }
+  target.dispatchEvent(new Event('input'));
+  target.focus();
+}
+
+// Track last focused textarea in card editor
+document.addEventListener('focusin', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    activeKbTarget = e.target;
+  }
+});
+
+
+// ── INLINE KEYBOARD (pops up from bottom when editing a lang field) ───────
+let inlineKbTarget = null;
+
+function openInlineKb(langKey, targetEl) {
+  const lang = LANGUAGES[langKey];
+  if (!lang || !lang.keys) return;
+  inlineKbTarget = targetEl;
+  document.getElementById('ikb-lang-name').textContent = lang.flag + '  ' + lang.label;
+  const rows = document.getElementById('ikb-rows');
+  rows.innerHTML = '';
+  lang.keys.forEach(section => {
+    const lbl = document.createElement('div');
+    lbl.className = 'kb-section-label';
+    lbl.textContent = section.label;
+    rows.appendChild(lbl);
+    const row = document.createElement('div');
+    row.className = 'kb-row';
+    section.keys.forEach(ch => {
+      const key = document.createElement('button');
+      key.className = 'kb-key';
+      key.textContent = ch;
+      key.type = 'button';
+      key.onmousedown = (e) => {
+        e.preventDefault(); // don't steal focus from textarea
+        insertIntoTarget(ch, targetEl);
+      };
+      row.appendChild(key);
+    });
+    // backspace
+    const bs = document.createElement('button');
+    bs.className = 'kb-key kb-wide';
+    bs.textContent = '⌫';
+    bs.type = 'button';
+    bs.onmousedown = (e) => { e.preventDefault(); deleteFromTarget(targetEl); };
+    row.appendChild(bs);
+    rows.appendChild(row);
+  });
+  // space
+  const spaceRow = document.createElement('div');
+  spaceRow.className = 'kb-row';
+  const sp = document.createElement('button');
+  sp.className = 'kb-key kb-space';
+  sp.textContent = 'space';
+  sp.type = 'button';
+  sp.onmousedown = (e) => { e.preventDefault(); insertIntoTarget(' ', targetEl); };
+  spaceRow.appendChild(sp);
+  rows.appendChild(spaceRow);
+  document.getElementById('inline-kb').classList.add('open');
+  // add padding to modal so content isn't hidden behind keyboard
+  document.querySelector('#modal-deck .modal').style.paddingBottom = '200px';
+}
+
+function closeInlineKb() {
+  document.getElementById('inline-kb').classList.remove('open');
+  inlineKbTarget = null;
+  const m = document.querySelector('#modal-deck .modal');
+  if (m) m.style.paddingBottom = '';
+}
+
+// ── KOREAN SYLLABLE COMPOSER ─────────────────────────────────────────────
+// Uses Unicode arithmetic: syllable = 0xAC00 + (lead*21 + vowel)*28 + tail
+// Jamo index tables
+const KO_LEADS  = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+const KO_VOWELS = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+const KO_TAILS  = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+// compound vowels that can be made by combining two simple vowels
+const KO_COMPOUND_VOWELS = {
+  'ㅗ+ㅏ':'ㅘ','ㅗ+ㅐ':'ㅙ','ㅗ+ㅣ':'ㅚ',
+  'ㅜ+ㅓ':'ㅝ','ㅜ+ㅔ':'ㅞ','ㅜ+ㅣ':'ㅟ',
+  'ㅡ+ㅣ':'ㅢ',
+};
+// compound tails (two consonants that can combine as coda)
+const KO_COMPOUND_TAILS = {
+  'ㄱ+ㅅ':'ㄳ','ㄴ+ㅈ':'ㄵ','ㄴ+ㅎ':'ㄶ',
+  'ㄹ+ㄱ':'ㄺ','ㄹ+ㅁ':'ㄻ','ㄹ+ㅂ':'ㄼ','ㄹ+ㅅ':'ㄽ','ㄹ+ㅌ':'ㄾ','ㄹ+ㅍ':'ㄿ','ㄹ+ㅎ':'ㅀ',
+  'ㅂ+ㅅ':'ㅄ',
+};
+
+function isKoConsonant(ch) { return KO_LEADS.includes(ch); }
+function isKoVowel(ch)     { return KO_VOWELS.includes(ch); }
+function isSyllable(ch)    { const c = ch.charCodeAt(0); return c >= 0xAC00 && c <= 0xD7A3; }
+
+function decomposeSyllable(ch) {
+  const code = ch.charCodeAt(0) - 0xAC00;
+  return {
+    lead:  KO_LEADS [Math.floor(code / (21*28))],
+    vowel: KO_VOWELS[Math.floor((code % (21*28)) / 28)],
+    tail:  KO_TAILS [code % 28],
+  };
+}
+
+function composeSyllable(lead, vowel, tail) {
+  const l = KO_LEADS.indexOf(lead);
+  const v = KO_VOWELS.indexOf(vowel);
+  const t = KO_TAILS.indexOf(tail);
+  if (l < 0 || v < 0 || t < 0) return null;
+  return String.fromCharCode(0xAC00 + (l*21 + v)*28 + t);
+}
+
+// State machine for composing Korean syllables
+// el → the target textarea; we track a "composing" state per element
+const koState = new WeakMap(); // el → {lead, vowel, tail, pos}
+
+function koGetState(el) {
+  if (!koState.has(el)) koState.set(el, null);
+  return koState.get(el);
+}
+function koSetState(el, s) { koState.set(el, s); }
+function koResetState(el)  { koState.set(el, null); }
+
+function insertIntoTarget(ch, el) {
+  if (!el) return;
+
+  // Non-Korean: just insert directly
+  const isKo = isKoConsonant(ch) || isKoVowel(ch);
+  if (!isKo) {
+    koResetState(el);
+    const s = el.selectionStart, e2 = el.selectionEnd;
+    el.value = el.value.slice(0,s) + ch + el.value.slice(e2);
+    el.selectionStart = el.selectionEnd = s + ch.length;
+    el.focus();
+    return;
+  }
+
+  // Korean composition logic
+  const pos = el.selectionStart;
+  const val = el.value;
+  const state = koGetState(el);
+
+  // ── CASE 1: No state — start fresh ───────────────────────────────────
+  if (!state) {
+    if (isKoConsonant(ch)) {
+      // Just place consonant for now, wait for vowel
+      el.value = val.slice(0,pos) + ch + val.slice(pos);
+      el.selectionStart = el.selectionEnd = pos + 1;
+      koSetState(el, { lead: ch, vowel: null, tail: null, pos });
+    } else {
+      // Bare vowel (no preceding consonant) — use ㅇ as silent lead
+      const syl = composeSyllable('ㅇ', ch, '');
+      el.value = val.slice(0,pos) + (syl||ch) + val.slice(pos);
+      el.selectionStart = el.selectionEnd = pos + 1;
+      koSetState(el, { lead: 'ㅇ', vowel: ch, tail: null, pos });
+    }
+    el.focus();
+    return;
+  }
+
+  // ── CASE 2: Have a lead consonant, no vowel yet ───────────────────────
+  if (state.lead && !state.vowel) {
+    if (isKoVowel(ch)) {
+      // Combine lead + vowel into syllable
+      const syl = composeSyllable(state.lead, ch, '');
+      // Replace the bare consonant at state.pos
+      el.value = val.slice(0, state.pos) + syl + val.slice(state.pos + 1);
+      el.selectionStart = el.selectionEnd = state.pos + 1;
+      koSetState(el, { lead: state.lead, vowel: ch, tail: null, pos: state.pos });
+    } else {
+      // Two consonants in a row — commit first, start new
+      koResetState(el);
+      const newPos = el.selectionStart;
+      el.value = el.value.slice(0, newPos) + ch + el.value.slice(newPos);
+      el.selectionStart = el.selectionEnd = newPos + 1;
+      koSetState(el, { lead: ch, vowel: null, tail: null, pos: newPos });
+    }
+    el.focus();
+    return;
+  }
+
+  // ── CASE 3: Have lead + vowel, no tail ───────────────────────────────
+  if (state.lead && state.vowel && !state.tail) {
+    if (isKoConsonant(ch)) {
+      // This consonant MIGHT be a tail (coda) or might be the start of next syllable.
+      // We tentatively add it as a tail — if a vowel comes next we'll reassign it.
+      const sylWithTail = composeSyllable(state.lead, state.vowel, ch);
+      if (sylWithTail) {
+        el.value = val.slice(0, state.pos) + sylWithTail + val.slice(state.pos + 1);
+        el.selectionStart = el.selectionEnd = state.pos + 1;
+        koSetState(el, { lead: state.lead, vowel: state.vowel, tail: ch, pos: state.pos });
+      } else {
+        // Can't be a tail — start new syllable
+        koResetState(el);
+        const newPos = el.selectionStart;
+        el.value = el.value.slice(0, newPos) + ch + el.value.slice(newPos);
+        el.selectionStart = el.selectionEnd = newPos + 1;
+        koSetState(el, { lead: ch, vowel: null, tail: null, pos: newPos });
+      }
+    } else if (isKoVowel(ch)) {
+      // Second vowel — try compound vowel first
+      const compound = KO_COMPOUND_VOWELS[state.vowel + '+' + ch];
+      if (compound) {
+        const syl = composeSyllable(state.lead, compound, '');
+        el.value = val.slice(0, state.pos) + syl + val.slice(state.pos + 1);
+        el.selectionStart = el.selectionEnd = state.pos + 1;
+        koSetState(el, { lead: state.lead, vowel: compound, tail: null, pos: state.pos });
+      } else {
+        // New syllable starting with silent ㅇ
+        const syl = composeSyllable('ㅇ', ch, '');
+        const newPos = state.pos + 1;
+        el.value = val.slice(0, newPos) + (syl||ch) + val.slice(newPos);
+        el.selectionStart = el.selectionEnd = newPos + 1;
+        koSetState(el, { lead: 'ㅇ', vowel: ch, tail: null, pos: newPos });
+      }
+    }
+    el.focus();
+    return;
+  }
+
+  // ── CASE 4: Have lead + vowel + tail ────────────────────────────────
+  if (state.lead && state.vowel && state.tail) {
+    if (isKoVowel(ch)) {
+      // The tail actually belongs to the next syllable as its lead
+      // Revert current syllable to no-tail, start new syllable with tail as lead
+      const sylNoTail = composeSyllable(state.lead, state.vowel, '');
+      el.value = val.slice(0, state.pos) + sylNoTail + val.slice(state.pos + 1);
+      const newPos = state.pos + 1;
+      const newSyl = composeSyllable(state.tail, ch, '');
+      el.value = el.value.slice(0, newPos) + (newSyl || state.tail + ch) + el.value.slice(newPos);
+      el.selectionStart = el.selectionEnd = newPos + 1;
+      koSetState(el, { lead: state.tail, vowel: ch, tail: null, pos: newPos });
+    } else if (isKoConsonant(ch)) {
+      // Try compound tail
+      const compound = KO_COMPOUND_TAILS[state.tail + '+' + ch];
+      if (compound) {
+        const sylCompound = composeSyllable(state.lead, state.vowel, compound);
+        el.value = val.slice(0, state.pos) + sylCompound + val.slice(state.pos + 1);
+        el.selectionStart = el.selectionEnd = state.pos + 1;
+        koSetState(el, { lead: state.lead, vowel: state.vowel, tail: compound, pos: state.pos });
+      } else {
+        // Commit current syllable, start new
+        koResetState(el);
+        const newPos = el.selectionStart;
+        el.value = el.value.slice(0, newPos) + ch + el.value.slice(newPos);
+        el.selectionStart = el.selectionEnd = newPos + 1;
+        koSetState(el, { lead: ch, vowel: null, tail: null, pos: newPos });
+      }
+    }
+    el.focus();
+    return;
+  }
+
+  // Fallback
+  const s2 = el.selectionStart;
+  el.value = val.slice(0,s2) + ch + val.slice(s2);
+  el.selectionStart = el.selectionEnd = s2 + 1;
+  el.focus();
+}
+
+function deleteFromTarget(el) {
+  if (!el) return;
+  const start = el.selectionStart, end = el.selectionEnd;
+  if (start !== end) {
+    el.value = el.value.slice(0, start) + el.value.slice(end);
+    el.selectionStart = el.selectionEnd = start;
+    koResetState(el);
+    el.focus();
+    return;
+  }
+  if (start === 0) return;
+
+  const prevChar = el.value[start - 1];
+
+  // If previous char is a composed Korean syllable, decompose one step
+  if (isSyllable(prevChar)) {
+    const { lead, vowel, tail } = decomposeSyllable(prevChar);
+    let replacement;
+    if (tail) {
+      // Remove just the tail — check if compound tail
+      if (tail.length > 1) {
+        // compound tail like ㄳ → remove last jamo, keep first
+        replacement = composeSyllable(lead, vowel, tail[0]) || (lead + vowel + tail[0]);
+      } else {
+        replacement = composeSyllable(lead, vowel, '') || (lead + vowel);
+      }
+      el.value = el.value.slice(0, start - 1) + replacement + el.value.slice(start);
+      el.selectionStart = el.selectionEnd = start; // stay at same pos, char replaced
+      koSetState(el, { lead, vowel, tail: null, pos: start - 1 });
+    } else {
+      // Remove the vowel — go back to bare consonant
+      replacement = lead;
+      el.value = el.value.slice(0, start - 1) + replacement + el.value.slice(start);
+      el.selectionStart = el.selectionEnd = start;
+      koSetState(el, { lead, vowel: null, tail: null, pos: start - 1 });
+    }
+  } else {
+    // Normal delete
+    el.value = el.value.slice(0, start - 1) + el.value.slice(start);
+    el.selectionStart = el.selectionEnd = start - 1;
+    koResetState(el);
+  }
+  el.focus();
+}
+
+// Close inline kb when clicking outside a lang-field
+document.addEventListener('focusin', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') {
+    activeKbTarget = e.target;
+    if (!e.target.classList.contains('lang-field')) {
+      closeInlineKb();
+    }
+  }
+});
+
+// Reset Korean compose state when cursor is manually moved (click/keydown)
+document.addEventListener('click', e => {
+  if (e.target.tagName === 'TEXTAREA') koResetState(e.target);
+});
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT') {
+    // Any real keyboard input resets compose state
+    if (!['Shift','Alt','Control','Meta','CapsLock','Tab'].includes(e.key)) {
+      koResetState(t);
+    }
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+renderHome();
+</script>
+
+<!-- Inline language keyboard (pops up when editing a lang field) -->
+<div class="inline-kb" id="inline-kb">
+  <div class="kb-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span class="kb-lang-label" id="ikb-lang-name">Keyboard</span>
+    <button class="kb-close" onclick="closeInlineKb()">✕</button>
+  </div>
+  <div class="kb-rows" id="ikb-rows"></div>
+</div>
+
+
+<!-- Session Summary -->
+<div class="session-summary" id="session-summary">
+  <div class="session-card">
+    <div style="font-size:2.8rem;margin-bottom:8px" id="ss-emoji">🎉</div>
+    <div class="session-title" id="ss-title">Session Complete!</div>
+    <div class="session-sub" id="ss-sub">Here's how you did</div>
+    <div class="session-stats">
+      <div class="ss-stat"><div class="ss-val" style="color:var(--green)" id="ss-got">0</div><div class="ss-lbl">Got it</div></div>
+      <div class="ss-stat"><div class="ss-val" style="color:var(--amber)" id="ss-hard">0</div><div class="ss-lbl">Hard</div></div>
+      <div class="ss-stat"><div class="ss-val" style="color:var(--rose)" id="ss-again">0</div><div class="ss-lbl">Again</div></div>
+    </div>
+    <div class="weak-preview" id="ss-weak" style="display:none">
+      <div class="weak-preview-title">🔴 Needs more practice</div>
+      <div id="ss-weak-list"></div>
+    </div>
+    <div class="session-actions">
+      <button class="btn btn-ghost" onclick="closeSessionSummary()">Back to deck</button>
+      <button class="btn btn-primary" id="ss-retry-btn" onclick="retryWeak()">🔁 Retry weak cards</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
