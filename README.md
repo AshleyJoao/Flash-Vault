@@ -2,7 +2,7 @@
 A fast, local-first flashcard app built for the way I actually revise — not the way study apps assume everyone revises.
 
 Dark, terminal-inspired UI — DM Mono for data and structure, Bricolage Grotesque for headings
-
+https://ashleyjoao.github.io/C0rtexcard/
 ## Features
 
 - **Folders & decks** — organise revision by subject with custom emoji/colour tags
